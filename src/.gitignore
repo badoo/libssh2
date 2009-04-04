@@ -1,0 +1,10 @@
+*~
+*.o
+*.lo
+*.la
+Makefile
+Makefile.in
+libssh2_config.h
+libssh2_config.h.in
+stamp-h1
+.libs
