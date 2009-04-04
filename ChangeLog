@@ -1,0 +1,3351 @@
+2008-12-26  Daniel Stenberg
+
+	* Makefile.am, TODO: Added 'TODO' file (again) with some fresh
+	things I could think of right now
+
+2008-12-26  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_trace.3: Added libssh2_trace man
+	page
+
+2008-12-26  Daniel Stenberg
+
+	* docs/libssh2_base64_decode.3: libssh2_base64_decode is deprecated
+	and subject for removal in a future version (like on the next soname
+	bump)
+
+2008-12-23  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_base64_decode.3: wrote up a first
+	libssh2_base64_decode man page, added a few missing man pages to the
+	tarball
+
+2008-12-23  Daniel Stenberg
+
+	* docs/libssh2_sftp_rename_ex.3, docs/libssh2_sftp_rmdir_ex.3,
+	docs/libssh2_sftp_stat_ex.3, docs/libssh2_sftp_unlink_ex.3,
+	docs/libssh2_sftp_write.3: based on Heiner Steven's report, fix the
+	name and description of these man pages!
+
+2008-12-22  Daniel Stenberg
+
+	* NEWS: briefly mention my recent sftp-related fixes
+
+2008-12-22  Daniel Stenberg
+
+	* README: mention web site and mailing list, as I think they're not
+	mentioned anywhere else in the package!
+
+2008-12-22  Daniel Stenberg
+
+	* src/sshentry.c: removed obviously superfluous comments
+
+2008-12-22  Daniel Stenberg
+
+	* src/misc.c: use a single >>32 instead of "(value / 65536) /
+	65536", just make sure that the shift is done on a 64bit type
+
+2008-12-22  Daniel Stenberg
+
+	* src/transport.c: remove unused #ifndef, and two whitespace
+	changes
+
+2008-12-22  Daniel Stenberg
+
+	* src/channel.c: style/indent changes only to enforce < 80 column
+	lines more strict
+
+2008-12-22  Daniel Stenberg
+
+	* NEWS, docs/libssh2_sftp_seek.3, include/libssh2_sftp.h,
+	src/sftp.c: libssh2_sftp_seek64() it is now for the 64bit seek
+	function too as the seek2 name has never been used in a release and
+	it makes the naming consistent
+
+2008-12-22  Daniel Stenberg
+
+	* docs/libssh2_session_block_directions.3, include/libssh2.h: 0.19
+	is now 1.0
+
+2008-12-22  Daniel Stenberg
+
+	* NEWS, docs/libssh2_sftp_tell.3, docs/libssh2_sftp_tell64.3,
+	src/sftp.c: Based on Alexander Lamaison's patch, there's now a new
+	function called libssh2_sftp_tell64() that returns the 64 bit file
+	offset, as the existing libssh2_sftp_tell() only returns a size_t.
+
+2008-12-22  Daniel Stenberg
+
+	* src/libssh2_priv.h, src/sftp.c: first conversion of a malloc =>
+	buffer in the sftp handle struct
+
+2008-12-20  Daniel Stenberg
+
+	* libssh2-style.el: helper script for emacs users to get the code
+	style done libssh2-style automatically
+
+2008-12-19  Daniel Stenberg
+
+	* NEWS, src/sftp.c:
+	- Markus Moeller fixed the issue also reported by Alexander Lamaison
+	  which caused SFTP reads with large buffers to fail.
+
+2008-12-17  Simon Josefsson <simon@josefsson.org>
+
+	* tests/ssh2.sh: Sshd is slow to start on some systems.
+
+2008-12-17  Daniel Stenberg
+
+	* src/libssh2_priv.h, src/sftp.c: Avoid one malloc by putting the
+	entire handle buffer in the handle struct at once, use a define for
+	the maximum size length of the handle instead of '256' in the code.
+
+2008-12-16  Daniel Stenberg
+
+	* src/sftp.c: removed some more libssh2_ prefixes from private
+	functions
+
+	Made the libssh2_sftp_open_ex() deal with servers that first
+	responds with STATUS OK and then sends the actual HANDLE. It seems
+	openssh does this at times and it screwed things up. To me it seems
+	like a spec violation...
+
+2008-12-16  Daniel Stenberg
+
+	* src/channel.c: removed unused code, intended the code somewhat
+
+2008-12-16  Daniel Stenberg
+
+	* src/sftp.c: Nothing used libssh2_sftp_packet_read's flush
+	argument anymore so I removed it and simplified the code somewhat
+	thanks to that. I then renamed the function to sftp_packet_read()
+	only since it is private in this file anyway.
+
+2008-12-15  Daniel Stenberg
+
+	* src/sftp.c: renamed libssh2_sftp_packet_requirev to plain
+	sftp_packet_requirev since it is private in this file only and a
+	shorter name is nicer
+
+	Removed a "flush" of the data in sftp_packet_requirev() that now
+	seems to have made SFTP operations a lot more reliable. It didn't
+	make much sense to have it there but if someone can present a reason
+	for one I figure we should carefully investigate one and only do it
+	conditionally where/when needed.
+
+2008-12-15  Daniel Stenberg
+
+	* docs/libssh2_sftp_last_error.3: Clarify that this is only fine to
+	use after an actual SFTP protocol error return code.
+
+2008-11-27  Simon Josefsson <simon@josefsson.org>
+
+	* tests/Makefile.am, tests/ssh2.sh: Support EXEEXT in self-test.
+
+2008-11-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Cygwin needs -lcrypto for -lssl.  Reported by "Yang
+	Tse" <yangsita@gmail.com>.
+
+2008-11-27  Daniel Stenberg
+
+	* docs/libssh2_session_block_directions.3: oops, add missing file
+
+2008-11-26   Yang Tse
+
+	* configure.in: fix again cygwin build failure unreleased
+	regression
+
+2008-11-25   Dan Fandrich
+
+	* src/userauth.c: Fixed a potential use of an uninitialized
+	variable, the result of which lead to an unneeded but harmless
+	realloc.  Reduced the scope of some automatic variables.
+
+2008-11-25   Dan Fandrich
+
+	* src/publickey.c: Fixed some typos in log messages
+
+2008-11-24  Daniel Stenberg
+
+	* NEWS, docs/Makefile.am, include/libssh2.h, src/kex.c,
+	src/libssh2_priv.h, src/packet.c, src/session.c, src/transport.c:
+	- Vlad Grachov brought the new function called
+	  libssh2_session_block_directions() which returns a bitmask for
+	  what directions the connection blocks. It is to be used
+	  applications that use non-blocking sockets and when a libssh2
+	  function returns LIBSSH2_ERROR_EAGAIN this function can be used to
+	  figure out in which direction the socket would block and thus it can
+	  wait for the socket to again be ready for communication in that
+	  direction before it calls libssh2 again.
+
+2008-11-21  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS, configure.in, tests/Makefile.am, tests/ssh2.c,
+	tests/ssh2.sh, tests/sshdwrap, tests/etc/host, tests/etc/host.pub,
+	tests/etc/sshd_config, tests/etc/user, tests/etc/user.pub: Add a
+	more realistic self-test of libssh2.
+
+2008-11-21  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am: Add rules to generate a code coverage report.
+
+2008-11-21  Simon Josefsson <simon@josefsson.org>
+
+	* example/simple/Makefile.am, src/Makefile.am: Use AM_CPPFLAGS
+	instead of deprecated INCLUDES.
+
+2008-11-21  Simon Josefsson <simon@josefsson.org>
+
+	* tests/simple.c: Add self-test of base64 decode.
+
+2008-11-21   Dan Fandrich
+
+	* src/session.c: Use only C89-style comments
+
+2008-11-21   Dan Fandrich
+
+	* src/mac.c: Check LIBSSH2_HMAC_RIPEMD consistently
+
+2008-11-20  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c, src/libgcrypt.h, src/libssh2_priv.h, src/pem.c:
+	Fix compiler warnings.
+
+2008-11-20  Simon Josefsson <simon@josefsson.org>
+
+	* src/Makefile.am: Move pem.c to libgcrypt section, it is not
+	needed for OpenSSL.
+
+2008-11-19  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Drop pkg-config test, not needed now.
+
+2008-11-19  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS, README, configure.in, src/Makefile.am: Rewrite OpenSSL+libz
+	detection logic.
+
+2008-11-11  Daniel Stenberg
+
+	* example/simple/Makefile.am: fix the include path to also point
+	out the build dir's src/ dir for the cases where we build the lot
+	outside of the source dir
+
+2008-11-11  Daniel Stenberg
+
+	* src/libssh2_priv.h: avoid duplicate function declarations on
+	windows
+
+2008-11-10  Daniel Stenberg
+
+	* win32/libssh2_config.h: WINSOCK_VERSION is no longer used
+	(Richard W.M. Jones fixed)
+
+2008-11-10  Daniel Stenberg
+
+	* configure.in, example/simple/Makefile.am, example/simple/scp.c,
+	example/simple/scp_nonblock.c, example/simple/scp_write.c,
+	example/simple/scp_write_nonblock.c, example/simple/sftp.c,
+	example/simple/sftp_RW_nonblock.c, example/simple/sftp_mkdir.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, example/simple/ssh2.c,
+	src/libssh2_priv.h: Richard W.M. Jones' 5 patches that enables
+	libssh2 to get cross-compiled with mingw
+
+2008-11-09   Paul Thomas
+
+	* src/channel.c: Fixes a problem that the last code change
+	apparently didn't fix. Verified that this works correctly with
+	another user.
+
+2008-11-01   Paul Thomas
+
+	* src/channel.c: Fixed an issue with a patch that I submitted where
+	the channel_read_ex() could get stuck in a busy read loop.
+
+2008-10-25   Yang Tse
+
+	* configure.in: fix cygwin build failure unreleased regression
+
+2008-10-03   Paul Thomas
+
+	* src/channel.c, src/session.c: Reformatted the code, updated line
+	endings to match original file, fixed the build problem, removed
+	 tabs and replaced with spaces and removed C89 unfriendly comments.
+
+2008-10-02  Daniel Stenberg
+
+	* NEWS: mention libssh2_channel_request_pty_size_ex()
+
+2008-10-02   Paul Thomas
+
+	* src/channel.c: This fix addresses bug# 2141548. Channel reads
+	would fail despite libssh2_poll() detecting that there was data
+	ready to be read on the socket. This is seen when small amounts of
+	data are ready to be read, typically 1-4 chars worth.
+
+2008-10-01   Paul Thomas
+
+	* include/libssh2.h, src/channel.c: Committed changes to add in
+	support for pty resizing. Credit for this patch goes to Vincent
+	Jaulin.
+
+2008-10-01   Paul Thomas
+
+	* src/session.c: Fixed an issue with the libssh2_poll_channel_read
+	function not reading both normal and extended data when a non-zero
+	value is passed in as the 2nd parameter. This now matches the
+	functionallity described in the documentation.
+
+2008-09-30  Daniel Stenberg
+
+	* NEWS, configure.in, src/libssh2_priv.h, win32/libssh2_config.h:
+	Carlo Bramini fixed the build for msys+mingw. Bug #1943976.
+
+2008-09-30  Daniel Stenberg
+
+	* example/simple/scp_nonblock.c,
+	example/simple/scp_write_nonblock.c,
+	example/simple/sftp_RW_nonblock.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c,
+	example/simple/sftp_write_nonblock.c,
+	example/simple/sftpdir_nonblock.c: Carlo Bramini's fixes for the
+	nonblocking examples for msys/mingw
+
+2008-09-29  Daniel Stenberg
+
+	* NEWS, win32/libssh2_config.h: Neil Gierman provided improved
+	Visual Studio 2008 code in bug #1946268
+
+2008-09-29  Daniel Stenberg
+
+	* NEWS, src/libssh2_priv.h, win32/libssh2_config.h:
+	- Bug #1862727 fixed libssh2_poll() to work on windows (by defining
+	HAVE_SELECT).
+
+2008-09-29  Daniel Stenberg
+
+	* NEWS, docs/libssh2_sftp_seek.3, include/libssh2_sftp.h,
+	src/sftp.c:
+	- Based on bug #1815692, we introduce libssh2_sftp_seek2() that
+	  allows seeking beyond the 2GB margin even on 32bit machines.
+
+2008-09-29  Daniel Stenberg
+
+	* NEWS, configure.in, src/libssh2_priv.h, src/scp.c:
+	- Based on a patch in bug #1878059 by Steven Ayre libssh2 now parses
+	  >2GB file sizes when downloading SCP files.
+
+2008-09-29  Daniel Stenberg
+
+	* NEWS, include/libssh2.h: Adhere to RFC4253 better and don't use
+	dash in the banner string. Bug #2064371
+
+2008-07-03  Daniel Stenberg
+
+	* NEWS, src/kex.c, src/libssh2_priv.h, src/packet.c,
+	src/sshentry.c, src/transport.c: Sean Peterson's key re-exchange
+	fix. See his long explanation on:
+
+	http://daniel.haxx.se/projects/libssh2/mail/libssh2-devel-archive-2008-06/0002.shtml
+
+2008-07-03  Daniel Stenberg
+
+	* docs/libssh2_session_abstract.3,
+	docs/libssh2_session_set_blocking.3: minor language updates
+
+2008-06-24  Daniel Stenberg
+
+	* src/sftp.c: Gah, I broke Sebastian's patch when I left out the
+	parentheses his patch did contain. Added properly now.
+
+2008-06-23  Daniel Stenberg
+
+	* src/sftp.c: |sftp.c:1470: warning: cast to pointer from integer
+	of different size Another reason why macros are evil: The string
+	(which is allready char *) should be cast into char * not the
+	integer.
+
+	Signed-off-by: Sebastian Siewior <sebastian@breakpoint.cc>
+
+2008-03-08  dottedmag
+
+	* docs/Makefile.am,
+	docs/libssh2_userauth_keyboard_interactive_ex.3: Added manpage for
+	libssh2_userauth_keyboard_interactive_ex(3)
+
+2008-03-07  Daniel Stenberg
+
+	* NEWS, src/misc.c:
+	- Mike Protts filed the bug report #1908724 that identified and
+	  fixed a problem with SFTP stat on files >4GB in size. Previously it
+	used 32bit math only.
+
+2008-01-03   Dan Fandrich
+
+	* NEWS, src/channel.c: Removed a stderr debug message that was
+	accidentally left in (bug #1863153)
+
+2008-01-02  Daniel Stenberg
+
+	* src/session.c: as mentioned in bug #1841442, select wants maxfd+1
+	in its first argument!
+
+2007-11-29  Daniel Stenberg
+
+	* src/channel.c: corrected wrong comment and made
+	libssh2_channel_wait_closed() return 0 as documented!
+
+2007-11-29  Daniel Stenberg
+
+	* docs/libssh2_channel_wait_closed.3: oops
+
+2007-11-29  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_channel_wait_closed.3: added
+	libssh2_channel_wait_closed man page
+
+2007-11-29  Daniel Stenberg
+
+	* docs/libssh2_channel_close.3: remove trailing junk character
+
+2007-11-21  dottedmag
+
+	* docs/libssh2_sftp_init.3, docs/libssh2_sftp_open_ex.3: Fix syntax
+	errors in libssh2_sftp_init and libssh2_sftp_open_ex manpages.
+
+2007-11-18   Guenter Knauf
+
+	* src/kex.c, src/sftp.c: fixed 'uninitialized' compiler warnings.
+
+2007-11-12  Daniel Stenberg
+
+	* src/userauth.c: valgrind was friendly enough to point out that
+	doing memcpy() on overlapping memory areas is a very bad idea so I
+	changed this to memmove()
+
+2007-11-12  Daniel Stenberg
+
+	* NEWS: add 0.18 release date
+
+2007-11-12  Daniel Stenberg
+
+	* include/libssh2.h: 0.19 in progress
+
+2007-11-10  Daniel Stenberg
+
+	* AUTHORS: mention Dan Fandrich and Guenter Knauf
+
+2007-11-08  Daniel Stenberg
+
+	* src/publickey.c: fix three compiler warnings on comparison
+	between signed and unsigned
+
+2007-11-08  Daniel Stenberg
+
+	* NEWS: Added a note about recent changes in a summarized way,
+	added dates to the three most recent releases and made many lines <
+	80 columns.
+
+2007-11-08  Daniel Stenberg
+
+	* Makefile.am: include specified files from the win32 dir, not
+	everything within it since that gives us CVS files too etc
+
+2007-11-08  Daniel Stenberg
+
+	* src/transport.c: Moved the check that the amount of data is
+	larger than the blocksize to only get done on the first block. Based
+	on the bug report #1826989
+
+	https://sourceforge.net/tracker/?func=detail&atid=703942&aid=1826989&group_id=125852
+
+2007-11-08  Daniel Stenberg
+
+	* src/channel.c: fix transfer stall bug with non-blocking
+	transfers, by Gavrie Philipson
+
+2007-09-28   Dan Fandrich
+
+	* include/libssh2.h, src/session.c: Stop shadowing a global
+	declaration
+
+2007-09-24  Daniel Stenberg
+
+	* src/transport.c: Immanuel Gregoire made libssh2_packet_read()
+	properly deal with blocks when in non-blocking state. Until this
+	fix, libssh2 just couldn't work properly on Windows while
+	non-blocking.
+
+2007-09-24  Daniel Stenberg
+
+	* example/simple/scp_nonblock.c: oops, that was debugging code that
+	wasn't supposed to be committed!
+
+2007-09-24  Daniel Stenberg
+
+	* example/simple/scp_nonblock.c, example/simple/sftp.c: fix by
+	Immanuel Gregoire, sizeof != strlen!
+
+2007-09-18   Guenter Knauf
+
+	* include/libssh2.h: fixed ssize_t typedef; added a define to
+	detect already defined ssize_t.
+
+2007-09-15   Guenter Knauf
+
+	* win32/libssh2.dsw, win32/libssh2_dll.dsp, win32/libssh2_lib.dsp,
+	win32/tests.dsp: fix line endings to crlf and flag binary to avoid
+	nasty conversions.
+
+2007-08-20   Dan Fandrich
+
+	* NEWS: Mention the const change in libssh2_channel_setenv_ex since
+	it's a (minor) change to the API.
+
+2007-08-18   Guenter Knauf
+
+	* win32/Makefile.win32, win32/test/Makefile.win32: added link to
+	native Win32 awk.
+
+2007-08-12  Daniel Stenberg
+
+	* NEWS, src/channel.c: The libssh2_channel_receive_window_adjust()
+	function failed to set the state variables at times and thus this
+	function would misbehave on repeated invokes.
+
+2007-08-10  Daniel Stenberg
+
+	* src/transport.c: When we have less than blocksize data left we
+	MUST (attempt to) read more since we can't decrypt anything in that
+	situation.
+
+2007-08-09   Dan Fandrich
+
+	* example/simple/scp.c, example/simple/scp_nonblock.c,
+	example/simple/scp_write.c, example/simple/scp_write_nonblock.c,
+	example/simple/sftp.c, example/simple/sftp_RW_nonblock.c,
+	example/simple/sftp_mkdir.c, example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, example/simple/ssh2.c: Removed
+	unnecessary casts and added const where necessary.
+
+2007-08-09   Dan Fandrich
+
+	* include/libssh2.h, src/channel.c: Added const to varname
+	parameter of libssh2_channel_setenv_ex
+
+2007-08-09   Dan Fandrich
+
+	* example/simple/Makefile.am: Fixed the samples to build outside
+	the source tree.  Removed redundant _SOURCES lines.
+
+2007-08-08  Daniel Stenberg
+
+	* NEWS, src/session.c: Satish Mittal and David J Sullivan fixed an
+	infinit recv() loop in libssh2_banner_receive()
+
+2007-08-08   Guenter Knauf
+
+	* nw/test/Makefile.netware: fixed test makefile to generate
+	config.h.
+
+2007-08-06  Daniel Stenberg
+
+	* include/libssh2.h: we work on 0.18 now, although it might be 1.0
+	- who knows?
+
+2007-08-06  Daniel Stenberg
+
+	* NEWS: 0.17 re-indent
+
+2007-08-06  Daniel Stenberg
+
+	* src/channel.c, src/comp.c, src/crypt.c, src/hostkey.c, src/kex.c,
+	src/libgcrypt.c, src/libgcrypt.h, src/libssh2_priv.h, src/mac.c,
+	src/misc.c, src/openssl.c, src/openssl.h, src/packet.c, src/pem.c,
+	src/publickey.c, src/scp.c, src/session.c, src/sftp.c,
+	src/transport.c, src/userauth.c: re-indented the source code with
+	this script:
+
+	indent \ --braces-on-if-line \ --braces-after-struct-decl-line \
+	--space-after-cast \ --line-length 79 \ --comment-line-length 79 \
+	--cuddle-else \ --no-tabs \ --tab-size 8 \ --indent-level 4 \
+	--no-space-after-for \ --space-after-if \ --space-after-while \
+	--no-space-after-function-call-names \ *.[ch]
+
+2007-08-06  Daniel Stenberg
+
+	* NEWS: 0.16 news
+
+2007-08-03   James Housley
+
+	* example/simple/ssh2.c: libssh2_userauth_list() requires the
+	lenght of the username to be passed, and not the sizeof() the array
+	holding it.
+
+2007-08-03  Daniel Stenberg
+
+	* include/libssh2.h: LIBSSH2_APINO is now gone, the sooner the
+	better. This is gonna cause some pains in apps relying on it, but it
+	is broken by design and we should not rely on it at all. Go for the
+	LIBSSH2_VERSION_* defines instead if you need to check for versions.
+
+2007-07-31  Daniel Stenberg
+
+	* example/simple/Makefile.am, example/simple/scp.c,
+	example/simple/scp_nonblock.c, example/simple/scp_write.c,
+	example/simple/scp_write_nonblock.c, example/simple/sftp.c,
+	example/simple/sftp_RW_nonblock.c, example/simple/sftp_mkdir.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, example/simple/ssh2.c: The
+	examples no longer have an include path pointing to the private
+	source dir but instead uses its own config.h file, that now is
+	included first to make large file magic have an effect.
+
+2007-07-31  Daniel Stenberg
+
+	* configure.in: add large file magic checks, and make sure we
+	update the config.h file in the example/simple subdir as well
+
+2007-07-31  Daniel Stenberg
+
+	* buildconf: create a private config.h file for the examples
+
+2007-07-30  Daniel Stenberg
+
+	* acinclude.m4: Peter O'Gorman pointed out (and fixed) that the
+	non-blocking check in configure made libssh2 use blocking sockets on
+	AIX 4 and 5, while that wasn't the intention.
+
+2007-07-23  Daniel Stenberg
+
+	* configure.in, src/session.c: libssh2_poll() no longer relies on
+	C99 features but instead uses alloca() on systems that have it - and
+	uses a fixed-size array on those that don't.  session.c was also
+	cleaned from a large amount of trailing whitespace.
+
+2007-07-22   Guenter Knauf
+
+	* example/simple/sftp.c: ooups - forgotten var added.
+
+2007-07-22   Guenter Knauf
+
+	* example/simple/sftp.c: added keyboard-interactive auth method;
+	added 5. argument to specify auth method.
+
+2007-07-22   Guenter Knauf
+
+	* nw/Makefile.netware: changed prelude file for gcc build.
+
+2007-07-21   Guenter Knauf
+
+	* win32/Makefile.win32: added var to specify cross compiler prefix.
+
+2007-07-20   Guenter Knauf
+
+	* win32/libssh2_config.h: added some defines for MSVC and other
+	non-gcc compilers.
+
+2007-07-20   Guenter Knauf
+
+	* example/simple/ssh2.c: moved the inclusion of libssh2_config.h to
+	the top.
+
+2007-07-20   Guenter Knauf
+
+	* example/simple/ssh2.c: added keyboard-interactive auth method;
+	added 4. argument to specify auth method.
+
+2007-07-19   Guenter Knauf
+
+	* example/simple/ssh2.c: moved blocks to make keyboard-interactive
+	second choice (if implemented).
+
+2007-07-19   Guenter Knauf
+
+	* example/simple/ssh2.c: few cosmetic changes; added block for
+	future implementation of keyboard-interactive method.
+
+2007-07-19   Guenter Knauf
+
+	* example/simple/ssh2.c: removed obsolete line.
+
+2007-07-19   Guenter Knauf
+
+	* example/simple/ssh2.c: added selection of authentication method
+	based on what libssh2_userauth_list() returns; added vars for the
+	key files.
+
+2007-07-19   James Housley
+
+	* src/scp.c, src/session.c:
+	* After setting the error to the error string from in the packet,
+	  set the pointer to NULL so it can't be double freed.
+	* On session cleanup be sure to free the last error if it needs to
+	be
+
+2007-07-18   James Housley
+
+	* src/userauth.c: The test after the memory allocation was
+	backwards, so keyboard-interactive would always fail due to a memory
+	problem.
+
+2007-07-18   Guenter Knauf
+
+	* example/simple/ssh2.c: fixed call to libssh2_userauth_list()
+	since NULL isnt supported for the username.
+
+2007-07-18   Guenter Knauf
+
+	* example/simple/ssh2.c: added check for available authentication
+	methods.
+
+2007-07-17   Guenter Knauf
+
+	* Makefile.am, src/Makefile.am: added NMakefile to Makefile.am so
+	that it gets included with releases and daily snapshots.
+
+2007-07-16   Guenter Knauf
+
+	* example/simple/ssh2.c: added test success messages.
+
+2007-07-16   Guenter Knauf
+
+	* include/libssh2.h: another trial to fix the typedefs.
+
+2007-07-15   Guenter Knauf
+
+	* win32/libssh2.dsp, win32/libssh2.dsw, win32/libssh2_dll.dsp,
+	win32/libssh2_lib.dsp: fixed MSVC project files to build static lib
+	and dll in separate direcories.
+
+2007-07-15  Daniel Stenberg
+
+	* configure.in: support --enable-maintainer-mode
+
+2007-07-15   Guenter Knauf
+
+	* win32/libssh2.dsp, win32/libssh2.dsw, win32/ssh2_sample.dsp,
+	win32/tests.dsp: fixed MSVC project files.
+
+2007-07-15  Daniel Stenberg
+
+	* Makefile.am: add maketgz to release archives
+
+2007-07-15  Daniel Stenberg
+
+	* Makefile.am, configure.in, maketgz, include/libssh2.h: Added
+	LIBSSH2_TIMESTAMP to the public header and it contains the timestamp
+	of the making of the release archive.
+
+	Added 'maketgz' as a script to build release archives with,
+	including automated snapshots or whatever. It updates the defines in
+	include/libssh2.h.
+
+	configure now extracts the version number from the include/libssh2.h
+	header in the source tree instead of using it fixed set in the
+	script (to remove the need for regenerating the configure script
+	when we run maketgz).
+
+	Makefile.am now has a dist-hook that puts ".dist" files in the
+	release tree instead of the file without the .dist extension, so
+	that we can easily add modified files in release archives. Like
+	maketgz.
+
+2007-07-15   Guenter Knauf
+
+	* nw/test/Makefile.netware: fixed test makefile to build all
+	samples.
+
+2007-07-15   Guenter Knauf
+
+	* NMakefile, src/NMakefile, win32/config.mk: fixed NMakefile stuff
+	to build at least the DLL again.
+
+2007-07-15  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am: Fix make distcheck.  Noted by Daniel.
+
+2007-07-14   Guenter Knauf
+
+	* include/libssh2.h: introduced some more version defines.
+
+2007-07-14  Daniel Stenberg
+
+	* HACKING, Makefile.am: Metion the current code style in the new
+	file called HACKING. In this, we could also add descriptions on how
+	to send us patches and bug reports etc...
+
+2007-07-14  Daniel Stenberg
+
+	* example/simple/scp.c, example/simple/scp_nonblock.c,
+	example/simple/scp_write.c, example/simple/scp_write_nonblock.c,
+	example/simple/sftp.c, example/simple/sftp_RW_nonblock.c,
+	example/simple/sftp_mkdir.c, example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, example/simple/ssh2.c: converted
+	to 4-level space indents, no trailing whitespace
+
+2007-07-14   Guenter Knauf
+
+	* nw/Makefile.netware, nw/test/Makefile.netware: some more NetWare
+	makefile fixes.
+
+2007-07-14  Daniel Stenberg
+
+	* example/simple/scp_write.c, example/simple/scp_write_nonblock.c,
+	example/simple/sftp_write.c, example/simple/ssh2.c: removed
+	compiler warnings, narrowed some source lines, killed trailing
+	whitespace
+
+2007-07-14   James Housley
+
+	* include/libssh2.h: For now make LIBSSH2_APINO a long, some
+	compilers make constants an int it seems.
+
+2007-07-09   Guenter Knauf
+
+	* include/libssh2.h, nw/Makefile.netware, nw/nwlib.c, nw/nwlibc.c:
+	added build for older CLIB version.
+
+2007-07-09   James Housley
+
+	* src/libssh2_priv.h, src/sftp.c: The variable "packet" needs to be
+	in LIBSSH2_SFTP_HANDLE for re-entry when blocking in
+	libssh2_sftp_close_handle()
+
+2007-07-08   James Housley
+
+	* src/channel.c: While the previous commit seemed to correct a
+	problem, it actually exposed another problem.  Commit this until a
+	proper fix is found
+
+2007-07-08   James Housley
+
+	* src/channel.c: Remove a blocking while loop that wasn't removed
+	when the code to return PACKET_EAGAIN was added, but should have
+	been.
+
+2007-07-05   James Housley
+
+	* example/simple/scp_nonblock.c, src/libssh2_priv.h, src/scp.c:
+	* Since the packet as already had data read from it, it can't retrun
+	  PACKET_EAGAIN while reading the rest of it.
+	* Get the error message in libssh2_scp_recv() in the same manner as
+	  it was gotten in libssh2_scp_send_ex()
+
+2007-07-05   Guenter Knauf
+
+	* include/libssh2.h: fix bug #1701782 - for now we only define for
+	the compiler versions where we know for sure - if later versions
+	still need those defines please report to the list.
+
+2007-07-05   Guenter Knauf
+
+	* include/libssh2.h: enter next round after release.
+
+2007-07-05   James Housley
+
+	* example/simple/scp_write_nonblock.c, src/channel.c,
+	src/libssh2_priv.h, src/scp.c: Gavrie Philipson sumitted a patch to
+	get the actual text of the error on scp upload.
+
+2007-07-04   James Housley
+
+	* docs/libssh2_sftp_readdir.3: Change the wording of the return
+	value to match the rest of the man pages
+
+2007-07-04  dottedmag
+
+	* docs/libssh2_sftp_readdir.3: Fixed manpage syntax (catched by
+	Debian's lintian)
+
+2007-06-28  Daniel Stenberg
+
+	* src/pem.c: as mentioned in bug #1655429, the CRLF pair was
+	stripped off in the wrong order!
+
+2007-06-25  Daniel Stenberg
+
+	* Makefile.am: added missing files (in 0.15) to the release tarball
+
+2007-06-23   James Housley
+
+	* src/channel.c, src/publickey.c, src/userauth.c:
+	* Eberhard Mattes submitted a patch "According to RFC 4251, a
+	boolean value of true is encoded as 1, not as 0xff".  Servers should
+	accept any non-zero value.
+
+	Bug:	1703472
+
+2007-06-22   James Housley
+
+	* src/session.c: Guenter Knauf submitted code to detect on windows
+	if the socket is blocking or not
+
+2007-06-20   Guenter Knauf
+
+	* nw/Makefile.netware: update export list for recent changes
+
+2007-06-18   James Housley
+
+	* src/channel.c, src/libssh2_priv.h: libssh2_channel_read_ex()
+	needed more changes to fully support non-blocking IO
+
+2007-06-18   James Housley
+
+	* src/sftp.c: Small fixes:
+	* libssh2_sftp_packet_read() - use the right variable for the
+	        number of bytes returned by libssh2_channel_read_ex()
+	* libssh2_sftp_packet_requirev - only call libssh2_waitsocket() when
+	        in blocking IO mode
+
+2007-06-18  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am: Fix distcheck.
+
+2007-06-17   James Housley
+
+	* src/channel.c, src/libssh2_priv.h: Make
+	libssh2_channel_receive_window_adjust() properly support
+	non-blocking
+
+2007-06-17   James Housley
+
+	* src/sftp.c: Clean up and standardization of code
+
+2007-06-15   James Housley
+
+	* NEWS, docs/libssh2_sftp_readdir.3, example/simple/sftpdir.c,
+	include/libssh2.h, include/libssh2_sftp.h, src/sftp.c: Created
+	libssh2_sftp_readdir_ex() and updated LIBSSH2_APINO to 200706151200
+
+2007-06-15   James Housley
+
+	* docs/Makefile.am: Add missing back-slash, so now they can
+	actually be installed
+
+2007-06-15   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_get_exit_status.3: Add
+	libssh2_channel_get_exit_status()
+
+2007-06-15   James Housley
+
+	* AUTHORS: Add me
+
+2007-06-15   James Housley
+
+	* src/kex.c: Another bug pointed out by Troy Gutjahr.  The free and
+	nulling for two pointers were crossed
+
+2007-06-15   James Housley
+
+	* src/sftp.c: Don't use memory after it has been freed, pointed out
+	by Troy Gutjahr
+
+2007-06-14   James Housley
+
+	* src/libssh2_priv.h: Some older BSD systems, OS X 10.3.9 for
+	example, need <stdio.h> before <sys/select.h>.  And <uio.h> is
+	needed for iovec
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_set_blocking.3,
+	docs/libssh2_session_set_blocking.3: Update
+	libssh2_channel_set_blocking.3 and add
+	libssh2_session_set_blocking.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_userauth_authenticated.3,
+	docs/libssh2_userauth_list.3, docs/libssh2_userauth_password_ex.3,
+	docs/libssh2_userauth_publickey_fromfile.3: Add
+	libssh2_userauth_authenticated.3, libssh2_userauth_list.3,
+	libssh2_userauth_password_ex.3 and
+	libssh2_userauth_publickey_fromfile.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_sftp_unlink_ex.3,
+	docs/libssh2_sftp_write.3: Add libssh2_sftp_unlink_ex.3 and
+	libssh2_sftp_write.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_sftp_shutdown.3,
+	docs/libssh2_sftp_stat_ex.3, docs/libssh2_sftp_symlink_ex.3,
+	docs/libssh2_sftp_tell.3: Add libssh2_sftp_shutdown.3,
+	libssh2_sftp_stat_ex.3, libssh2_sftp_symlink_ex.3 and
+	libssh2_sftp_tell.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_sftp_last_error.3,
+	docs/libssh2_sftp_rename_ex.3, docs/libssh2_sftp_rmdir_ex.3,
+	docs/libssh2_sftp_seek.3: Add libssh2_sftp_last_error.3,
+	libssh2_sftp_rename_ex.3, libssh2_sftp_rmdir_ex.3 and
+	libssh2_sftp_seek.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_sftp_close_handle.3,
+	docs/libssh2_sftp_fstat_ex.3: Add libssh2_sftp_close_handle.3 and
+	libssh2_sftp_fstat_ex.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_session_abstract.3,
+	docs/libssh2_session_callback_set.3,
+	docs/libssh2_session_method_pref.3, docs/libssh2_session_methods.3:
+	Add libssh2_session_abstract.3, libssh2_session_callback_set.3,
+	libssh2_session_method_pref.3 and libssh2_session_methods.3
+
+2007-06-14   James Housley
+
+	* docs/Makefile.am, docs/libssh2_hostkey_hash.3,
+	docs/libssh2_scp_recv.3, docs/libssh2_scp_send_ex.3: Add
+	libssh2_hostkey_hash.3, libssh2_scp_recv.3 and libssh2_scp_send_ex.3
+
+2007-06-14   James Housley
+
+	* NEWS: Updated to include the most recent entries from ChangeLog
+
+2007-06-14   Guenter Knauf
+
+	* nw/Makefile.netware: update export list for recent changes - take
+	2
+
+2007-06-14   Guenter Knauf
+
+	* src/packet.c: non-gcc compilers break with var declarations in
+	the middle of the code.
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_session_last_errno.3,
+	docs/libssh2_session_last_error.3: Add libssh2_session_last_errno.3
+	and libssh2_session_last_error.3
+
+2007-06-13   Guenter Knauf
+
+	* nw/Makefile.netware: update export list for recent changes
+
+2007-06-13   Guenter Knauf
+
+	* get_ver.awk: fixed space detection
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_setenv_ex.3,
+	docs/libssh2_channel_x11_req_ex.3: Add libssh2_channel_setenv_ex.3
+	and libssh2_channel_x11_req_ex.3
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_request_pty_ex.3,
+	docs/libssh2_channel_send_eof.3: Add
+	libssh2_channel_request_pty_ex.3 and libssh2_channel_send_eof.3
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_open_ex.3,
+	docs/libssh2_channel_process_startup.3: Add
+	libssh2_channel_open_ex.3 and libssh2_channel_process_startup.3
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_free.3,
+	docs/libssh2_channel_handle_extended_data.3,
+	docs/libssh2_channel_handle_extended_data2.3: Add
+	libssh2_channel_free.3, libssh2_channel_handle_extended_data.3 and
+	libssh2_channel_handle_extended_data2.3
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_flush_ex.3,
+	docs/libssh2_channel_forward_cancel.3: Add
+	libssh2_channel_flush_ex.3 and libssh2_channel_forward_cancel.3
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_direct_tcpip_ex.3,
+	docs/libssh2_channel_eof.3: Add libssh2_channel_direct_tcpip_ex.3
+	and libssh2_channel_eof.3
+
+2007-06-13   James Housley
+
+	* docs/Makefile.am, docs/libssh2_banner_set.3,
+	docs/libssh2_channel_close.3: Add libssh2_banner_set.3 and
+	libssh2_channel_close.3
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_forward_accept.3,
+	docs/libssh2_channel_forward_listen_ex.3,
+	docs/libssh2_channel_read_ex.3,
+	docs/libssh2_channel_set_blocking.3,
+	docs/libssh2_channel_wait_eof.3, docs/libssh2_channel_write_ex.3,
+	docs/libssh2_session_disconnect_ex.3, docs/libssh2_session_free.3,
+	docs/libssh2_session_init.3, docs/libssh2_session_startup.3,
+	docs/libssh2_sftp_init.3, docs/libssh2_sftp_mkdir_ex.3,
+	docs/libssh2_sftp_open_ex.3, docs/libssh2_sftp_read.3,
+	docs/libssh2_sftp_readdir.3, docs/template.3: The month should be
+	the 3-letter abbreviation instead of spelled out.
+
+2007-06-13   James Housley
+
+	* docs/libssh2_sftp_readdir.3: Update to match current code and add
+	errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_sftp_read.3: Update to match current code and add
+	errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_sftp_open_ex.3: Fix date
+
+2007-06-13   James Housley
+
+	* docs/libssh2_sftp_open_ex.3: Update to match current code and add
+	errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_sftp_mkdir_ex.3: Update to match current code and
+	add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_sftp_init.3: Update to match current code and add
+	errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_forward_listen_ex.3: Remove extraneous
+	character
+
+2007-06-13   James Housley
+
+	* docs/libssh2_session_startup.3: Update to match current code and
+	add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_session_init.3: Update to match current code and add
+	errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_session_free.3: Update to match current code and add
+	errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_session_disconnect_ex.3: Update to match current
+	code and add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_set_blocking.3: Update to match current code
+	and add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_wait_eof.3: Update to match current code and
+	add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_forward_listen_ex.3: Update to match current
+	code and add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_forward_accept.3: Update to match current
+	code and add errors
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_read_ex.3: Fix spacing issue
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_forward_accept.3,
+	docs/libssh2_channel_forward_listen_ex.3,
+	docs/libssh2_channel_set_blocking.3,
+	docs/libssh2_channel_wait_eof.3, docs/libssh2_poll.3,
+	docs/libssh2_poll_channel_read.3,
+	docs/libssh2_session_disconnect_ex.3, docs/libssh2_session_free.3,
+	docs/libssh2_session_init.3, docs/libssh2_session_startup.3,
+	docs/libssh2_sftp_init.3, docs/libssh2_sftp_mkdir_ex.3,
+	docs/libssh2_sftp_open_ex.3, docs/libssh2_sftp_read.3,
+	docs/libssh2_sftp_readdir.3, docs/template.3: Change "SEE ALSO" to
+	SEE ALSO
+
+2007-06-13   James Housley
+
+	* docs/libssh2_channel_read_ex.3, docs/libssh2_channel_write_ex.3:
+	Update to reflect the current code and add possible error values
+
+2007-06-12   James Housley
+
+	* src/channel.c, src/libssh2_priv.h, src/publickey.c, src/scp.c,
+	src/session.c, src/sftp.c, include/libssh2.h,
+	include/libssh2_publickey.h: libssh2_channel_free() actually can
+	return PACKET_EAGAIN.  Update all calling functions to support that
+	with the following API notes:
+
+	* libssh2_publickey_shutdown(), libssh2_session_free() changed
+	  to return an "int" to allow signaling of LIBSSH2_ERROR_EAGAIN.
+
+	* libssh2_scp_recv(), libssh2_scp_send_ex() and libssh2_sftp_init()
+	  will loop in on libssh2_channel_free() when there is an error.
+	  It is not possible to return LIBSSH2_ERROR_EAGAIN in this
+	  condition in these 3 functions and not lose the original error
+	code.
+
+2007-06-10   James Housley
+
+	* docs/libssh2_channel_readnb_ex.3: The function no longer exists
+
+2007-06-10  Daniel Stenberg
+
+	* include/libssh2.h: include sys/types.h since the compile breaks
+	on Linux otherwise - we need ssize_t from there
+
+2007-06-10   James Housley
+
+	* src/libssh2_priv.h, src/session.c, src/userauth.c: Sharing state
+	vairables between the userauth functions was a nice idea, but
+	libssh2_userauth_list() can't share with the others.  So to be safe
+	don't have any share.
+
+2007-06-10   James Housley
+
+	* win32/libssh2_config.h: Add a define for vsnprintf, similar to
+	snprintf that is already there.
+
+	Bug:	1702156
+
+2007-06-10   James Housley
+
+	* src/publickey.c: Fix misspelling in trace
+
+	Bug:	1703464
+
+2007-06-09   James Housley
+
+	* src/libssh2_priv.h: Since uint32_t is used, inttypes.h should be
+	included.
+
+2007-06-08   James Housley
+
+	* src/kex.c: In the code rewrite
+	libssh2_kex_method_diffie_hellman_group14_sha1_key_exchange() lost
+	two initializer routines, restore them.
+
+2007-06-08   James Housley
+
+	* docs/libssh2_channel_read_ex.3, docs/libssh2_channel_readnb_ex.3,
+	docs/libssh2_channel_wait_eof.3, docs/libssh2_channel_write_ex.3,
+	docs/libssh2_sftp_mkdir_ex.3, docs/libssh2_sftp_read.3,
+	docs/libssh2_sftp_readdir.3, example/simple/scp_nonblock.c,
+	example/simple/scp_write_nonblock.c,
+	example/simple/sftp_RW_nonblock.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c,
+	example/simple/sftp_write_nonblock.c,
+	example/simple/sftpdir_nonblock.c, include/libssh2.h,
+	include/libssh2_sftp.h, src/libssh2_priv.h: To simplify the user's
+	error interface always use LIBSSH2_ERROR_EAGAIN.
+	LIBSSH2CHANNEL_EAGAIN and LIBSSH2SFTP_EAGAIN are still valid, but
+	are defined as LIBSSH2_ERROR_EAGAIN.
+
+2007-06-08   James Housley
+
+	* src/session.c: libssh2_session_disconnect_ex() should be
+	returning PACKET_EAGAIN instead of LIBSSH2_ERROR_EAGAIN, so it
+	matches the other functions return values.
+
+2007-06-07   James Housley
+
+	* src/channel.c, src/publickey.c, src/session.c, src/sftp.c,
+	src/userauth.c: When shutting down sub-systems and closing the
+	channel try our best to free any memory still allocated in the state
+	variables
+
+2007-06-07   James Housley
+
+	* docs/Makefile.am: Remove 2 last files
+
+2007-06-07   James Housley
+
+	* docs/Makefile.am: Remove the removed files
+
+2007-06-07   James Housley
+
+	* docs/libssh2_sftp_mkdir_ex.3, docs/libssh2_sftp_mkdirnb_ex.3,
+	docs/libssh2_sftp_open_ex.3, docs/libssh2_sftp_read.3,
+	docs/libssh2_sftp_readdir.3, docs/libssh2_sftp_readdirnb.3,
+	docs/libssh2_sftp_readnb.3, example/simple/sftp_RW_nonblock.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c,
+	example/simple/sftp_write_nonblock.c,
+	example/simple/sftpdir_nonblock.c, include/libssh2_sftp.h,
+	src/libssh2_priv.h, src/sftp.c: Finish making SFTP fully
+	non-blocking capable.
+
+	Functions that return an "int", and friends, return
+	LIBSSH2SFTP_EAGAIN.  Functions that return a structure return NULL
+	and set the error to LIBSSH2_ERROR_EAGAIN
+
+2007-06-06   James Housley
+
+	* example/simple/sftp_RW_nonblock.c,
+	example/simple/sftp_write_nonblock.c, include/libssh2_sftp.h,
+	src/libssh2_priv.h, src/sftp.c: Make libssh2_sftp_write() be fully
+	non-blocking.  The state of the socket is fully honored.
+	LIBSSH2SFTP_EAGAIN is returned when the call would block.
+
+2007-06-06   James Housley
+
+	* docs/Makefile.am, docs/libssh2_channel_forward_accept.3,
+	docs/libssh2_channel_forward_listen_ex.3,
+	docs/libssh2_channel_read_ex.3, docs/libssh2_channel_readnb_ex.3,
+	docs/libssh2_channel_wait_eof.3, docs/libssh2_channel_write_ex.3,
+	docs/libssh2_session_disconnect_ex.3, docs/libssh2_session_init.3,
+	docs/libssh2_session_startup.3, docs/libssh2_sftp_init.3,
+	example/simple/Makefile.am, example/simple/scp.c,
+	example/simple/scp_nonblock.c, example/simple/scp_write.c,
+	example/simple/scp_write_nonblock.c, example/simple/sftp.c,
+	example/simple/sftp_RW_nonblock.c, example/simple/sftp_mkdir.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, include/libssh2.h,
+	include/libssh2_sftp.h, src/channel.c, src/kex.c,
+	src/libssh2_priv.h, src/misc.c, src/packet.c, src/publickey.c,
+	src/scp.c, src/session.c, src/sftp.c, src/transport.c,
+	src/userauth.c: Modify the code to truely support non-blocking.
+	Propogate the EAGAIN error all the way up to the user interface.
+	All code modules bug sftp.c have been completed.
+
+	Functions that return an "int", or similar return
+	LIBSSH2CHANNEL_EAGAIN to indicate some part of the call would block,
+	in non-blocking mode.
+
+	Functions that return a structure, like "LIBSSH2_CHANNEL *", return
+	NULL and set the libssh2 error.  The error can be obtained with
+	either libssh2_session_last_error() or libssh2_session_last_errno().
+	Either of these will return the error code of LIBSSH2_ERROR_EAGAIN
+	if the call would block, in non-blocking mode.
+
+	The current state of a function and some variable are keep in the
+	structures so that on the next call the operation that would block
+	can be retried again with the same data.
+
+2007-06-06   James Housley
+
+	* src/transport.c: libssh2_packet_read() was checking the "errno"
+	even when recv() didn't return an error.  "errno" should have been
+	zero by the recv() call but doesn't seem to be on all systems.  Only
+	check when recv() says there is an error.
+
+	Bug:		1703467 Patch:		1703468
+
+2007-05-28   James Housley
+
+	* include/libssh2.h, include/libssh2_publickey.h,
+	include/libssh2_sftp.h, src/channel.c, src/comp.c, src/crypt.c,
+	src/hostkey.c, src/kex.c, src/libgcrypt.c, src/libgcrypt.h,
+	src/libssh2_priv.h, src/mac.c, src/misc.c, src/openssl.c,
+	src/openssl.h, src/packet.c, src/pem.c, src/publickey.c, src/scp.c,
+	src/session.c, src/sftp.c, src/transport.c, src/userauth.c:
+	Initially the libssh2 code was indented with tabs of 4 spaces.  Some
+	of the recent commits converted the tabs to 4 spaces, which matched
+	the initial indent size.  Other commits converted the tabs to 8
+	spaces, this didn't match.
+
+	All the code has been converted to 4 space indents.  No changes to
+	line lengths or actual code was performed.  This is in preperation
+	to my up coming non-blocking work so my commits should only be code
+	changes and line lengths in the code I am working on.
+
+2007-05-08  Daniel Stenberg
+
+	* src/transport.c: Eberhard Mattes' fix for libssh2_packet_read()
+	for when reading very small chunks at a time.
+
+2007-05-01   Dan Fandrich
+
+	* example/simple/Makefile.am: Fix building out of the source tree.
+
+2007-04-26   Guenter Knauf
+
+	* example/simple/Makefile.am, example/simple/scp.c,
+	example/simple/scp_nonblock.c, example/simple/sftp.c,
+	example/simple/sftp_RW_nonblock.c, example/simple/sftp_mkdir.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, example/simple/ssh2.c: include
+	libssh_config.h to get the configure vars in.
+
+2007-04-26   Guenter Knauf
+
+	* configure.in, example/simple/scp.c,
+	example/simple/scp_nonblock.c, example/simple/sftp.c,
+	example/simple/sftp_RW_nonblock.c, example/simple/sftp_mkdir.c,
+	example/simple/sftp_mkdir_nonblock.c,
+	example/simple/sftp_nonblock.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c, example/simple/sftpdir.c,
+	example/simple/sftpdir_nonblock.c, example/simple/ssh2.c,
+	win32/libssh2_config.h: changed to configure defines to control
+	inclusion of headers from libssh2_config.h.
+
+2007-04-22   James Housley
+
+	* example/simple/Makefile.am, example/simple/sftp_mkdir.c,
+	example/simple/sftp_mkdir_nonblock.c: Test programs for
+	libssh2_sftp_mkdir_ex() and libssh2_sftp_mkdirnb_ex()
+
+2007-04-22   James Housley
+
+	* docs/Makefile.am, docs/libssh2_sftp_mkdir_ex.3,
+	docs/libssh2_sftp_mkdirnb_ex.3: Document libssh2_sftp_mkdir_ex()
+	and libssh2_sftp_mkdirnb_ex()
+
+2007-04-22   James Housley
+
+	* src/sftp.c, include/libssh2_sftp.h: Make _libssh2_sftp_mkdir_ex()
+	fully non-blocking safe.  This makes libssh2_sftp_mkdirnb_ex()
+	non-blocking safe and libssh2_sftp_mkdir_ex() blocking safe
+
+2007-04-22   James Housley
+
+	* docs/libssh2_sftp_init.3, docs/libssh2_sftp_open_ex.3,
+	docs/libssh2_sftp_read.3, docs/libssh2_sftp_readdir.3,
+	docs/libssh2_sftp_readdirnb.3, docs/libssh2_sftp_readnb.3:
+	libssh2_sftp.h is needed for all of these functions
+
+2007-04-22   James Housley
+
+	* docs/libssh2_sftp_readdir.3, docs/libssh2_sftp_readdirnb.3: Fix a
+	couple of locations where read should have been readdir
+
+2007-04-22   James Housley
+
+	* src/sftp.c: libssh2_sftp_seek() and libssh2_sftp_tell() are
+	NB-SAFE, since they only set variables
+
+2007-04-22   James Housley
+
+	* example/simple/Makefile.am, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c: Create two sample programs,
+	similar to sftp.c and sftp_nonblock.c, that will test blocking and
+	non-blocking write SFTP transfers
+
+2007-04-22   James Housley
+
+	* src/sftp.c: Make _libssh2_sftp_write() fully non-blocking safe.
+	This makes libssh2_sftp_writenb() non-blocking safe and
+	libssh2_sftp_write() blocking safe
+
+2007-04-22   James Housley
+
+	* example/simple/sftp_nonblock.c: Commit the version that actually
+	uses the non-blocking code
+
+2007-04-22   James Housley
+
+	* example/simple/sftp_nonblock.c: Commit the version that actually
+	uses the non-blocking read
+
+2007-04-22   James Housley
+
+	* example/simple/sftp_nonblock.c: Update comment
+
+2007-04-22   James Housley
+
+	* example/simple/Makefile.am, example/simple/sftp_nonblock.c: Make
+	sftp_nonblock.c a non-blocking version of sftp.c, just like
+	sftpdir.c
+
+2007-04-22   James Housley
+
+	* example/simple/sftp_RW_nonblock.c: Move sftp_nonblock.c to
+	sftp_RW_nonblock.c, since it isn't just a non-blocking version of
+	sftp.c.  It has different command line parameters and tries to do
+	more
+
+2007-04-22   James Housley
+
+	* src/sftp.c: Make _libssh2_sftp_read() fully non-blocking safe.
+	This makes libssh2_sftp_readnb() non-blocking safe and
+	libssh2_sftp_read() blocking safe
+
+2007-04-22   James Housley
+
+	* example/simple/sftp.c:
+	* Explicity set blocking
+
+2007-04-22   James Housley
+
+	* example/simple/sftpdir.c: Unless we tell libssh2 that we are
+	blocking, which we are because didn't set the socket to non-blocking
+	it will think we are in non-blocking mode in a lot of places
+
+2007-04-22   James Housley
+
+	* example/simple/sftpdir_nonblock.c: Add comment about setting
+	non-blocking
+
+2007-04-21   Guenter Knauf
+
+	* win32/Makefile.win32, win32/test/Makefile.win32: fixed ARFLAGS
+	for CodeWarrior build.
+
+2007-04-21   Guenter Knauf
+
+	* nw/test/Makefile.netware, win32/Makefile.win32,
+	win32/test/Makefile.win32: some more makefile fixes.
+
+2007-04-21   Guenter Knauf
+
+	* nw/Makefile.netware, nw/test/Makefile.netware,
+	win32/Makefile.win32, win32/test/Makefile.win32: fixed debug
+	option.
+
+2007-04-21   Guenter Knauf
+
+	* nw/Makefile.netware: fixed ARFLAGS for CodeWarrior build; added
+	libssh2_sftp_writenb to export list.
+
+2007-04-21   James Housley
+
+	* include/libssh2_sftp.h, src/sftp.c: Non-blocking work
+
+	* The following low level packet routines now fully support
+	    non-blocking: libssh2_sftp_packet_read()
+	    libssh2_sftp_packet_ask()
+	    libssh2_sftp_packet_require()
+	    libssh2_sftp_packet_requirev()
+
+	* libssh2_sftp_readdirnb() functions completely in non-blocking mode
+
+	* The rest of the routines which call the libssh2_sftp_packet_*
+	  routine loop on a return code of PACKET_EAGAIN.  This maintains the
+	  current functionality until they fully support non-blocking
+
+	* The state of all function are labeled with either NB-SAFE or
+	  NB-UNSAFE, for those that are know.  NB-UNSAFE?? for those that
+	  haven't been examined.
+
+2007-04-21   James Housley
+
+	* example/simple/Makefile.am, example/simple/sftpdir_nonblock.c:
+	Create a simple test for sftp readdir with non-blocking
+
+2007-04-21   James Housley
+
+	* docs/Makefile.am, docs/libssh2_sftp_readdir.3,
+	docs/libssh2_sftp_readdirnb.3: Document libssh2_sftp_readdir() and
+	libssh2_sftp_readdirnb()
+
+2007-04-19   Dan Fandrich
+
+	* include/libssh2_publickey.h: Added some consts to struct members
+
+2007-04-18   Dan Fandrich
+
+	* src/kex.c, src/publickey.c, src/userauth.c: Fixed some compiler
+	warnings and made some more tables 'const'.
+
+2007-04-18   Dan Fandrich
+
+	* NEWS, include/libssh2.h, include/libssh2_publickey.h,
+	include/libssh2_sftp.h, src/channel.c, src/hostkey.c,
+	src/libssh2_priv.h, src/misc.c, src/publickey.c, src/sftp.c,
+	src/userauth.c: Made some function parameters in the API const.
+	This is an API change, but correctly-written applications should see
+	no source or binary compatibility issues.  Also fixed a few compiler
+	warnings.
+
+2007-04-17   Dan Fandrich
+
+	* src/kex.c: Bail out on a short kex packet.
+
+2007-04-17   Dan Fandrich
+
+	* src/channel.c, src/comp.c, src/crypt.c, src/hostkey.c, src/kex.c,
+	src/libssh2_priv.h, src/mac.c, src/misc.c, src/packet.c,
+	src/session.c, src/sftp.c, src/userauth.c: Made most internal
+	tables 'static const'.
+
+2007-04-16   Guenter Knauf
+
+	* nw/Makefile.netware, win32/Makefile.win32: added ranlib when
+	library is created with ar.
+
+2007-04-14   Guenter Knauf
+
+	* nw/test/Makefile.netware: added sftpdir target; fixed linking.
+
+2007-04-13   Dan Fandrich
+
+	* src/channel.c, src/hostkey.c, src/transport.c: Properly propagate
+	out of memory errors.
+
+2007-04-13  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am: Make ChangeLog a phony target.
+
+2007-04-12   Guenter Knauf
+
+	* src/channel.c: changed to configure defines to control inclusion
+	of headers from libssh2_config.h.
+
+2007-04-12   Guenter Knauf
+
+	* src/packet.c, src/misc.c: changed to configure defines to control
+	inclusion of headers from libssh2_config.h.
+
+2007-04-12   Guenter Knauf
+
+	* src/session.c: Win32 has no ENOTCONN - checked MSVC6, MingW32,
+	Borland C++ 5.5, OpenWatcom 1.6; all have this define in winsock2.h
+	but blocked with '#if 0'; changed to configure defines to control
+	inclusion of headers from libssh2_config.h
+
+2007-04-12   Guenter Knauf
+
+	* nw/Makefile.netware: updated Makefile.netware to add more
+	exports; fixed linking; updated OpenSSL version to have users use
+	latest.
+
+2007-04-12   Guenter Knauf
+
+	* win32/Makefile.win32: removed HAVE_IOCTLSOCKET define; updated
+	OpenSSL version to have users use latest.
+
+2007-04-12   Guenter Knauf
+
+	* include/libssh2_sftp.h: blocked unistd.h inclusion for Win32
+	builds.
+
+2007-04-12   Guenter Knauf
+
+	* include/libssh2.h: added two more typedefs but blocked them so
+	they are only used with MSVC6 or lower (dont know if later MSVC
+	versions still need them).
+
+2007-04-12   Guenter Knauf
+
+	* src/transport.c: fixed wrong type and sync with usage.
+
+2007-04-12   Guenter Knauf
+
+	* configure.in: check for sys/time.h
+
+2007-04-12   Dan Fandrich
+
+	* NEWS, src/channel.c, src/comp.c, src/kex.c, src/packet.c,
+	src/publickey.c, src/session.c, src/userauth.c: Better handle out
+	of memory situations.
+
+2007-04-12  Daniel Stenberg
+
+	* README: added --enable-debug
+
+2007-04-12   Guenter Knauf
+
+	* win32/libssh2_config.h: removed ENOTCONN define, added
+	HAVE_IOCTLSOCKET define; added the new defines for inclusion of
+	headers.
+
+2007-04-12   Dan Fandrich
+
+	* README, docs/libssh2_channel_forward_listen_ex.3,
+	docs/libssh2_poll.3, docs/libssh2_session_init.3,
+	docs/libssh2_sftp_read.3, docs/libssh2_sftp_readnb.3,
+	docs/template.3: Fixed some spelling mistakes in documentation.
+
+2007-04-12   Dan Fandrich
+
+	* src/channel.c, NEWS: libssh2_channel_close now waits for a
+	SSH_MSG_CHANNEL_CLOSE message from the server as mandated by the
+	RFC.  Not doing so causes an OpenSSH server to occasionally corrupt
+	(truncate) short files uploaded by scp (which manifests itself as a
+	failure of test603 in the curl regression test suite).
+
+2007-04-11  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in, src/libssh2_priv.h: Replace #if !WIN32 with #if
+	HAVE_SYS_SOCKET_H and HAVE_SYS_IOCTL_H (AIX needs sys/ioctl.h).
+	Reported by Michael Augustin
+	<maugustin-hi6Y0CQ0nG0@public.gmane.org>.
+
+2007-04-05  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c: Use _libssh2_* namespace.  Suggested by Guenter
+	Knauf <eflash-hi6Y0CQ0nG0@public.gmane.org>.
+
+2007-04-05  Simon Josefsson <simon@josefsson.org>
+
+	* config.rpath, configure.in, m4/lib-ld.m4, m4/lib-link.m4,
+	m4/lib-prefix.m4, m4/libgcrypt.m4, src/Makefile.am: Use Bruno's M4
+	macros to search for libgcrypt.
+
+2007-04-05  Simon Josefsson <simon@josefsson.org>
+
+	* install-sh, mkinstalldirs: Remove generated files.
+
+2007-04-05  Simon Josefsson <simon@josefsson.org>
+
+	* INSTALL: Moved to README.
+
+2007-04-05  Simon Josefsson <simon@josefsson.org>
+
+	* src/libssh2_priv.h: Need sys/ioctl.h for FIONBIO, tiny patch from
+	Michael Augustin <maugustin@gmx.net>.
+
+2007-04-05  Simon Josefsson <simon@josefsson.org>
+
+	* src/libssh2_priv.h, src/packet.c, src/session.c: Fix AIX problem,
+	based on patch from Michael Augustin <maugustin@gmx.net>.
+
+2007-04-04  Simon Josefsson <simon@josefsson.org>
+
+	* src/comp.c: Protect #include of zlib.h if we build without zlib.
+
+2007-04-01  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/sftp.c: Enabled fragmenting SFTP requests to
+	LIBSSH2_SFTP_PACKET_MAXLEN.
+
+	(Thanks to elifantu@mail.ru for the patch)
+
+2007-04-01  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/sftp.c: Missing brace added
+
+2007-04-01  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/sftp.c: libssh2_sftp_read should not return error if it
+	receives SSH_FX_EOF code in SSH_FXP_STATUS packet.
+
+	(Thanks to elifantu@mail.ru for the patch)
+
+2007-03-31  Daniel Stenberg
+
+	* src/channel.c: Callers should be using libssh2_packet_require_ex
+	instead of libssh2_packet_ask_ex. The purpose of these calls is to
+	clear out any packets that may have arrived already, so there's no
+	need to poll for more.  (Dan Fandrich)
+
+2007-03-29  Simon Josefsson <simon@josefsson.org>
+
+	* include/libssh2.h: Don't use CPP symbol _MSC_VER unless it is
+	defined, because undefined CPP symbols means 0.  Tiny patch from
+	"Yang Tse" <yangsita@gmail.com>.
+
+2007-03-29  Simon Josefsson <simon@josefsson.org>
+
+	* src/Makefile.am: Need -no-undefined for AIX/cygwin/mingw32 etc.
+	Reported by "Yang Tse" <yangsita@gmail.com>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Add comment.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Set $SHLIB_SUFFIX_NAME properly, tiny patch from
+	Daniel Johnson <daniel@daniel-johnson.org>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* tests/Makefile.am: Remove -no-install since it breaks Darwin
+	builds (probably a libtool bug), report from Daniel Johnson
+	<daniel@daniel-johnson.org>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS: Add.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS: Add.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS: Add -lsocket/-lnsl.  End sentences with '.'.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS: Add.  Start sentences with uppercase.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Use AC_SEARCH_LIBS on socket() for -lsocket, so we
+	don't link with -lsocket unless it is necessary.  Remove
+	SHLIB_LDFLAGS, it was never used by anything.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Fix typo.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* src/session.c:
+	(libssh2_poll_channel_write, libssh2_poll_listener_queued): Mark as
+	static.  Remove unneeded prototypes.  Break Solaris 10 builds
+	according to "Heiko Jansen" <jansen@hbz-nrw.de>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* src/packet.c:
+	(libssh2_packet_x11_open, libssh2_packet_queue_listener): Mark as
+	static functions.  Remove unnecessary prototypes.  Breaks Solaris 10
+	builds according to "Heiko Jansen" <jansen@hbz-nrw.de>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Search -lnsl for inet_addr, suggested by "Heiko
+	Jansen" <jansen@hbz-nrw.de>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* README: Fix typo, reported by "Heiko Jansen" <jansen@hbz-nrw.de>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am: Dist buildconf, suggested by "Heiko Jansen"
+	<jansen@hbz-nrw.de>.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* docs/Makefile.am: Add 'dist_' to make sure man pages are included
+	in the release.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am: Add rule to generate ChangeLog.  No need for foreign
+	or nostdinc (correct me if I'm wrong?).
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* AUTHORS: Add.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* LICENSE: Remove.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* COPYING: Add, from LICENSE.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* README: Rewrite, based on INSTALL.
+
+2007-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS: Add, from README.
+
+2007-03-15  Daniel Stenberg
+
+	* src/openssl.c: Dan Fandrich fixed another memory leak, this time
+	in the OpenSSL interface code:
+
+	It's not clear to me whether all the BN_news in _libssh2_rsa_new
+	need to be cleaned up, too.  The OpenSSL docs for RSA_free implies
+	that you don't need to, and valgrind doesn't complain, so it's
+	probably OK as is.
+
+2007-03-15  Daniel Stenberg
+
+	* README: give credit to those who made the changes
+
+2007-03-15  Daniel Stenberg
+
+	* src/packet.c: fixed a memory leak in the packet handling (Dan
+	Fandrich)
+
+2007-03-14  Daniel Stenberg
+
+	* src/crypt.c, src/openssl.c, tests/Makefile.am: Dan Fandrich
+	patch:
+
+	1 - let libssh2 compile with OpenSSL 0.9.6b.  This is due to 'crypt'
+	is found in one of its header files and EVP_MAX_BLOCK_LENGTH not
+	being found.
+
+	2 - The EXEEXT patch is because automake 1.7 doesn't support it, and
+	recent automakes add it automatically
+
+2007-02-23  Daniel Stenberg
+
+	* example/simple/Makefile.am, example/simple/sftpdir.c: Added
+	sftpdir, a sample doing an SFTP directory listing
+
+2007-02-23  Daniel Stenberg
+
+	* docs/libssh2_sftp_open_ex.3: nicer look
+
+2007-02-23  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_channel_read_ex.3,
+	docs/libssh2_channel_readnb_ex.3, docs/libssh2_channel_write_ex.3,
+	docs/libssh2_poll.3, docs/libssh2_poll_channel_read.3,
+	docs/libssh2_sftp_read.3, docs/libssh2_sftp_readnb.3: more/updated
+	man pages
+
+2007-02-14  Daniel Stenberg
+
+	* src/transport.c: Lucas Newman found and fixed a problem where
+	libssh2_packet_read() could "lose" bytes when it read data from the
+	network that was an unaligned number of bytes compared to the
+	blocksize.
+
+2007-02-08  Daniel Stenberg
+
+	* example/simple/sftp.c: add include to fix compiler warning
+
+2007-02-08  Daniel Stenberg
+
+	* example/simple/sftp.c: Guenter Knauf added support for another IP
+	and I changed the order of the arguments and updated some comments.
+
+2007-02-08  Daniel Stenberg
+
+	* nw/Makefile.netware, nw/test/Makefile.netware,
+	win32/Makefile.win32, win32/test/Makefile.win32: Guenter Knauf's
+	Netware+Win32 updates after my recent changes
+
+2007-02-07  Daniel Stenberg
+
+	* src/channel.c: removed unused variable
+
+2007-02-07  Daniel Stenberg
+
+	* acinclude.m4, configure.in, src/channel.c: setting sockets
+	non-blocking using more portable code and configure macros from the
+	libcurl project (written by me)
+
+2007-02-07  Daniel Stenberg
+
+	* get_ver.awk, include/libssh2.h, nw/Makefile, nw/Makefile.netware,
+	nw/keepscreen.c, nw/nwlibc.c, nw/test/Makefile.netware,
+	src/libssh2_priv.h, src/session.c, win32/Makefile,
+	win32/Makefile.win32, win32/libssh2_config.h,
+	win32/test/Makefile.win32: Netware and Windows fixes by Guenter
+	Knauf
+
+2007-02-06  Daniel Stenberg
+
+	* include/libssh2.h: let's call the current version 0.15-CVS
+
+2007-02-04  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in, src/session.c: Remove unused uses of -lm and
+	math.h.
+
+2007-02-04  Simon Josefsson <simon@josefsson.org>
+
+	* README: Fix.
+
+2007-02-02  Daniel Stenberg
+
+	* configure.in, example/simple/scp.c, include/libssh2.h,
+	src/channel.c, src/kex.c, src/libssh2_priv.h, src/misc.c,
+	src/packet.c, src/publickey.c, src/scp.c, src/session.c,
+	src/sftp.c, src/transport.c, src/userauth.c: 1 - new public
+	 function libssh2_trace() that enables tracing/debug output on
+	various stuff if libssh2 was built with debug. If built without
+	 debug, the function does nothing.  2 - configure --enable-debug is
+	now enough to build a debug version (including picky compiler
+	options) 3 - internally, we no longer need/use #ifdef/#endif around
+	all uses of the _libssh2_debug() function/macro.
+
+	The scp.c example is the first application to test this new debug
+	logging.
+
+2007-02-02  Daniel Stenberg
+
+	* README: non-blocking and man pages
+
+2007-02-02  Daniel Stenberg
+
+	* Makefile.am, configure.in, docs/Makefile.am: Include man pages in
+	distro tarball and make install. Note that this is still (by far) an
+	incomplete set of man pages.
+
+2007-02-02  Daniel Stenberg
+
+	* src/Makefile.am: bump the version-info due to the changes in the
+	API we're working on and due to the fact that there's release of the
+	previous CVS-state shipped in Debian (and possibly others distros).
+
+2007-02-02  Daniel Stenberg
+
+	* Makefile.am, configure.in, ssh2_sample.c, example/Makefile.am,
+	example/simple/Makefile.am, example/simple/scp_nonblock.c,
+	example/simple/sftp.c, example/simple/sftp_nonblock.c,
+	include/libssh2.h, include/libssh2_sftp.h, src/Makefile.am,
+	src/channel.c, src/crypt.c, src/kex.c, src/libssh2_priv.h,
+	src/misc.c, src/packet.c, src/publickey.c, src/scp.c,
+	src/session.c, src/sftp.c, src/transport.c: Adding src/transport.c
+	for the SECSH transport layer read/write in a non- blocking way. The
+	channel code is now responsible for enabling/disabling blocking
+	status and to work with it.
+
+	I've also modified indenting and fixed compiler warnings at places,
+	and added a bunch of new examples in example/simple that I've used
+	to verify that the code still runs like before.
+
+	libssh2_channel_{read|write}nb_ex() and
+	libssh2_sftp_{read|write}nb() are the four new functions that
+	supposedly work non-blocking.
+
+2007-02-02  Daniel Stenberg
+
+	* docs/libssh2_channel_read_ex.3: non-blocking stuff removed, see
+	*readnb_ex()
+
+2007-02-02  Daniel Stenberg
+
+	* docs/libssh2_channel_read_ex.3, docs/libssh2_channel_readnb_ex.3,
+	docs/libssh2_sftp_init.3, docs/libssh2_sftp_open_ex.3,
+	docs/template.3: more docs, including a template.3 for new man
+	pages
+
+2007-02-02  Simon Josefsson <simon@josefsson.org>
+
+	* README: Libgcrypt stuff works.
+
+2007-02-02  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c: Mind your p's and q's!  RSA authentication now
+	works.
+
+2007-02-01  Daniel Stenberg
+
+	* example/simple/scp.c: Chris Nystrom helped me realize I must
+	count the received bytes myself to know when the transfer is
+	complete
+
+2007-01-30  Daniel Stenberg
+
+	* example/simple/scp.c: oops, it shouldn't be non-blocking when
+	doing blocking transfers...
+
+2007-01-30  Daniel Stenberg
+
+	* example/simple/scp.c: simple (blocking) SCP transfer
+
+2007-01-24  Daniel Stenberg
+
+	* example/simple/sftp.c, example/simple/ssh2.c: two simple samples
+
+2007-01-23  Daniel Stenberg
+
+	* src/libssh2_priv.h, src/mac.c, src/openssl.c, src/pem.c: fix
+	compiler warnings
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c: Fix RSA private key reading (still not working).
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c: Fix warnings.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.h: Fix warnings.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c, src/hostkey.c, src/libgcrypt.c, src/libgcrypt.h,
+	src/libssh2_priv.h, src/openssl.c, src/openssl.h: Fix warnings.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c: Fix warnings.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c: Fix mem leak.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/pem.c: Fix mem leak.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/openssl.h, src/pem.c, src/publickey.c: Fix warnings.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/openssl.h: Need more #include's.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/pem.c, src/openssl.c: Fix warnings.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/kex.c: Remove OpenSSL #include.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c: Fix mem leak.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: If --with-libgcrypt is specified, don't check for
+	OpenSSL.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/kex.c, src/libgcrypt.h, src/openssl.h: Abstract bignum API.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c, src/libgcrypt.c, src/libgcrypt.h, src/openssl.c,
+	src/openssl.h: Abstract RSA/DSA private key file reading and
+	RSA/DSA signing, and implement them in openssl/libgcrypt layer.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/libssh2_priv.h: Add prototypes for pem.c functions.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/Makefile.am: Add pem.c.
+
+2007-01-23  Simon Josefsson <simon@josefsson.org>
+
+	* src/pem.c: Add.  Functions for reading PEM files and decoding
+	ASN.1.
+
+2007-01-22  Daniel Stenberg
+
+	* src/libssh2_priv.h: please picky compiler
+
+2007-01-22  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c, src/libssh2_priv.h: Remove non-iovec based RSA/DSA
+	signing (not used, and DSA code even buggy).
+
+2007-01-19  Daniel Stenberg
+
+	* src/openssl.c: fix warning for memcpy()
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c: Indent.  Fix mem leak on errors.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c: Remove openssl #include.  Protect use of 3DES.
+	Reorder definitions to match preference order.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c: Remove debug code.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c: Use new generic crypto APIs.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/kex.c: Align with new _LIBSSH2_CRYPT_METHOD API, for
+	libgcrypt support.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/libssh2_priv.h: Fix _LIBSSH2_CRYPT_METHOD for libgcrypt
+	support.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/libgcrypt.c, src/libgcrypt.h, src/openssl.c, src/openssl.h:
+	Implement new _libssh2_cipher_* API.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c, src/libgcrypt.c, src/libgcrypt.h, src/openssl.c,
+	src/openssl.h: Support DSA verifications.
+
+2007-01-18  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c: Check return value.  Fix SHA1_Final.
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/openssl.h: Fix 3DES check.
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c: Use libssh2_sha1 instead of SHA1.
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c: Fix last commit.
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c: Use libssh2_* wrappers for SHA-1.
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c, src/hostkey.c, src/libgcrypt.h, src/mac.c,
+	src/openssl.h: Use LIBSSH2_* instead of OPENSSL_NO_* (should
+	ultimately be possible to chose by ./configure?).
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c, src/kex.c, src/libgcrypt.h, src/libssh2_priv.h,
+	src/openssl.h: Use LIBSSH2_* instead of OPENSSL_NO_* (should
+	ultimately be possible to chose by ./configure?).
+
+2007-01-17  Simon Josefsson <simon@josefsson.org>
+
+	* src/openssl.h: Unconditionally use SHA-1.
+
+2007-01-16  Simon Josefsson <simon@josefsson.org>
+
+	* src/openssl.c, src/libgcrypt.c: Add.
+
+2007-01-16  Simon Josefsson <simon@josefsson.org>
+
+	* README: Add.
+
+2007-01-16  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c, src/libgcrypt.h, src/openssl.h: Begin to abstract
+	RSA operations.
+
+2007-01-16  Simon Josefsson <simon@josefsson.org>
+
+	* src/Makefile.am: Also build openssl.c or libgcrypt.c.
+
+2007-01-16  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Define an automake conditional iff libgcrypt is
+	used.
+
+2007-01-15  Simon Josefsson <simon@josefsson.org>
+
+	* src/Makefile.am, src/channel.c, src/kex.c, src/libgcrypt.h,
+	src/libssh2_priv.h, src/mac.c, src/openssl.h, src/packet.c,
+	src/session.c, src/userauth.c: Use generic APIs for (HMAC-)MD5/SHA1
+	and RNG, and implement them via OpenSSL/libgcrypt.
+
+2007-01-15  Simon Josefsson <simon@josefsson.org>
+
+	* m4/libgcrypt.m4: Add, for libgcrypt.
+
+2007-01-15  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Look for libgcrypt if --with-libgcrypt is given to
+	./configure.  Note that until the libgcrypt work is complete,
+	libssh2 also link to OpenSSL.
+
+2007-01-10  Simon Josefsson <simon@josefsson.org>
+
+	* src/hostkey.c, src/kex.c, src/libssh2_priv.h: Remove unfinished
+	OPENSSL_NO_SHA ifdef stuff, since SHA-1 is required for libssh2 to
+	work.
+
+2007-01-09  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in, Makefile.am, tests/Makefile.am, tests/simple.c: Add
+	basic self test.
+
+2007-01-03  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* buildconf: --copy added to automake --add-missing to avoid
+	symlinks in bootstrapped CVS snapshot tarballs
+
+2007-01-02  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* docs/libssh2_channel_read_ex.3, docs/libssh2_session_startup.3:
+	Minus sign escaped to not be treated as emdash in man pages.
+
+2006-12-21  Daniel Stenberg
+
+	* src/kex.c: fix compiler warnings
+
+2006-12-21  Daniel Stenberg
+
+	* src/comp.c: fix compiler warnings (and some indent changes)
+
+2006-12-21  Daniel Stenberg
+
+	* src/misc.c, src/mac.c: fix compiler warnings
+
+2006-12-21  Daniel Stenberg
+
+	* src/hostkey.c: fix compiler warnings, minor re-indenting
+
+2006-12-21  Daniel Stenberg
+
+	* docs/libssh2_channel_forward_accept.3,
+	docs/libssh2_channel_forward_listen_ex.3,
+	docs/libssh2_channel_read_ex.3,
+	docs/libssh2_channel_set_blocking.3, docs/libssh2_session_free.3,
+	docs/libssh2_session_init.3, docs/libssh2_session_startup.3: Added
+	an initial set of man pages.
+
+2006-12-21  Daniel Stenberg
+
+	* ssh2_sample.c: fix warnings and allow passing user name and
+	password on the command line
+
+2006-12-13  Daniel Stenberg
+
+	* acinclude.m4, configure.in: Added the configure option
+	--enable-debug-build which not only enables a debug build (using -g
+	and disabling all -O options), but also sets a whole range of
+	picky/strict compiler options depending on what compiler and version
+	that is used. This function is ripped right off the curl configure
+	script, written by yours truly. I left it using the same name as in
+	the curl script to 1) make it obvious where it comes from, so that
+	2) it will be easier to update and keep it in sync with future
+	modifications.
+
+	Now, this shows MAAAAAAAAANY warnings...
+
+2006-12-13  Daniel Stenberg
+
+	* src/session.c: Removed use of ceil() since that is a math lib
+	function and getting the exact accuracy of the microsecond to
+	millisecond conversion simply cannot be that important. We don't
+	even explicitly link with -lm...
+
+2006-12-09  Simon Josefsson <simon@josefsson.org>
+
+	* src/packet.c, src/session.c: Fix indentation.
+
+2006-12-09  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c, src/kex.c: Fix indentation.
+
+2006-12-07  Simon Josefsson <simon@josefsson.org>
+
+	* buildconf: Add.
+
+2006-12-07  Simon Josefsson <simon@josefsson.org>
+
+	* Makefile.am, configure.in, m4/autobuild.m4: Add autobuild.m4, to
+	make it easier to use http://autobuild.josefsson.org/.
+
+2006-12-07  Simon Josefsson <simon@josefsson.org>
+
+	* src/crypt.c, src/kex.c, src/libssh2_priv.h, src/packet.c,
+	src/session.c: Move symmetric OpenSSL EVP crypto calls to crypt.c.
+
+2006-11-27  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/packet.c: Improve detection of closed channel. Eleminates
+	lock-ups on multi-channel operation.
+
+2006-11-27  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/packet.c: Reading bigger blocks from network before
+	decryption.  Significantly increases performance.
+
+2006-11-27  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/packet.c: write(2) may write only part of passed data under
+	FreeBSD.  Make sure whole buffer is written.
+
+2006-11-24  Daniel Stenberg
+
+	* README: mention a few recent changes
+
+2006-11-20  Daniel Stenberg
+
+	* src/Makefile.am: Add builddir/src to the include path, for the
+	generated config header when building out of the source tree.
+
+2006-11-20  Daniel Stenberg
+
+	* Makefile.am: ssh2_sample now gets the right include path to the
+	current include directory
+
+2006-11-20  Daniel Stenberg
+
+	* configure.in, src/libssh2_priv.h: check for inline in configure
+
+2006-11-20  Daniel Stenberg
+
+	* Makefile.am, Makefile.in, buildconf, config.guess, config.sub,
+	configure.in, src/Makefile.am, src/Makefile.in,
+	src/libssh2_config.h.in: Starting now, we use automake and libtool
+	for the build.
+
+2006-11-20  Daniel Stenberg
+
+	* Makefile.in, configure.in, include/libssh2_config.h.in,
+	include/libssh2_priv.h, src/libssh2_config.h.in,
+	src/libssh2_priv.h: Moved the private include files libssh2_priv.h
+	and libssh2_config.h.in from include/ into the src/ directory. The
+	include/ dir is now strictly for public headers.
+
+	Also, I removed the special win32 source package creation target in
+	the makefile and I modified the contact email address in
+	configure.in to point out the libssh2-devel list.
+
+2006-11-19  Daniel Stenberg
+
+	* src/publickey.c: kill compiler warnings
+
+2006-11-19  Daniel Stenberg
+
+	* src/Makefile.in: until we automake, let 'make' build all by
+	default
+
+2006-11-19  Daniel Stenberg
+
+	* src/channel.c: kill warnings
+
+2006-11-17  Daniel Stenberg
+
+	* configure.in: Use pkg-config --cflags-only-I when getting the
+	include files necessary to build with OpenSSL. Previous approach
+	caused a bad compiler option get set.
+
+2006-11-14   James Housley
+
+	* src/packet.c: Patch from Daniel Stenberg
+
+	1 - #include <inttypes.h> and uses uint32_t (this is not very
+	    portable and need attention as I mentioned in my separate mail)
+
+	2 - changes libssh2_blocking_read() to return ssize_t and all code
+	    that uses this function explicitly checks its return code (better).
+
+	3 - I fixed a bunch of compiler warnings where functions got called
+	    with unsigned char * when they expect char *. I strongly suggest we
+	    patch away all warnings - now.
+
+2006-11-13   James Housley
+
+	* include/libssh2_sftp.h: Reproduce most of the POSIX
+	permission/file type defines from sys/stat.h so that if compiled
+	with a non-POSIX compiler these are still available for client
+	software.
+
+2006-11-13   James Housley
+
+	* src/userauth.c: As pointed out, feof() will always fail after a
+	rewind
+
+2006-11-13   James Housley
+
+	* src/userauth.c: Bug: [ 1592645 ] Public key can not be readed
+	from file
+
+	While posting a public key file to a remote server via cut-n-paste
+	it is possible that the key won't have the proper ending.  It might
+	not have the standard carriage return or line feed.  It might even
+	have extra spaces.  This patch is based on the originators original
+	patch, but is more extensive.  If reading the file ends in EOF,
+	remove that character.  Then if there are spaces at the end of the
+	file remove them also.
+
+	This does not fix the posibility of the same error in a multi-key
+	file, but it is a start.
+
+2006-11-10   James Housley
+
+	* src/packet.c: /* RFC4253 section 6.1 Maximum Packet Length says:
+	 *
+	 * "All implementations MUST be able to process packets with
+	 * uncompressed payload length of 32768 bytes or less and
+	 * total packet size of 35000 bytes or less (including length,
+	 * padding length, payload, padding, and MAC.)."
+	 */ Protect against an improper packet from producing unreasonable
+	values.  Credit goes to Daniel Stenberg
+
+2006-11-10   James Housley
+
+	* src/sftp.c: libssh2_sftp_readdir() wasn't null terminating the
+	filename.  If there is enough room in the buffer, all a null to the
+	end.
+
+2006-11-04   James Housley
+
+	* include/libssh2.h, include/libssh2_sftp.h, src/channel.c,
+	src/misc.c, src/sftp.c, src/userauth.c: The public *_ex() API
+	functions, most of them, used "int" for length values.  The
+	convience functions pass in the return from strlen() which is
+	"size_t", usually an "unsigned long".  This created the possiblility
+	of passing in a value that could look negative.
+
+	All "int" lengths were converted to "unsigned int".  Ideally they
+	should all become "size_t", but that is a bigger change.  This is a
+	good start.
+
+2006-06-22  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in, include/libssh2.h: Bump for release
+
+2006-06-22  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2_priv.h, src/kex.c, src/packet.c: Don't
+	wait for KEX_INIT prior to sending our own packet.  Watch out for
+	bad KEX_INIT guesses and burn packets if necessary.
+
+2006-05-26  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, src/packet.c: Swap ordering of
+	packet_add/packet-inspection to avoid inspect after free.  Fix
+	OpenSSL detection using pkg-config.
+
+2006-04-17  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c, src/session.c: Map Win32 errno values
+
+2006-04-07  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, src/Makefile.in: autoconf already handles -g for us
+
+2006-04-06  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/kex.c, src/session.c: Plug leaks caused by not using
+	OpenSSL's EVP interface correctly
+
+2006-04-05  Sara Golemon <pollita@libssh2.org>
+
+	* src/session.c: Map win32 error codes
+
+2006-03-08  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/session.c: Allow socket_fd == 0 in
+	libssh2_session_startup()
+
+2006-03-02  Sara Golemon <pollita@libssh2.org>
+
+	* LICENSE, include/libssh2.h, include/libssh2_priv.h,
+	include/libssh2_publickey.h, include/libssh2_sftp.h, src/channel.c,
+	src/comp.c, src/crypt.c, src/hostkey.c, src/kex.c, src/mac.c,
+	src/misc.c, src/packet.c, src/publickey.c, src/scp.c,
+	src/session.c, src/sftp.c, src/userauth.c: Bump copyright year
+
+2006-03-02  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, configure.in: Bump version number
+
+2006-02-23  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, README, configure.in, include/libssh2_priv.h,
+	src/Makefile.in: BugFix#1436593: Apply build options for HPUX
+	targets
+
+2006-02-20  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/packet.c: Fixed errorneous flushing packets for unrelated
+	channels when one is closed (thanks to Alexander Holyapin)
+
+2006-01-06  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, README: Fix   make install  on MacOSX
+
+2005-11-17  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Add terminating NULL to readlin/realpath
+	results
+
+2005-11-02  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/channel.c, src/packet.c: Fix miscellaneous bugs in
+	src/channel.c and src/packet.c Courtessy David Robins
+
+2005-11-01  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, include/libssh2.h: Prep for release
+
+2005-10-04  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* include/libssh2_sftp.h: Added missing '#ifdef __cplusplus extern
+	"C" {}' stanza
+
+2005-08-25  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2_priv.h: Explicitly include sha.h and md5.h from
+	openssl
+
+2005-08-10  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/channel.c: Fix x11_req.  Multiple packet_len issues
+	and error handling logic. (Simon Hart)
+
+2005-07-21  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, README, configure.in, include/libssh2.h,
+	include/libssh2_config.h.in, include/libssh2_priv.h,
+	include/libssh2_publickey.h, src/Makefile.in, src/misc.c,
+	src/publickey.c: Add publickey subsystem support
+
+2005-07-11  Sara Golemon <pollita@libssh2.org>
+
+	* src/kex.c, README: Fix generation of 'e' portion of
+	Diffie-Hellman keyset.
+
+2005-07-06  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Fix rename op -- Take 2
+
+2005-07-06  Sara Golemon <pollita@libssh2.org>
+
+	* src/sftp.c: Correct ancient typos in error messages
+
+2005-07-05  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in, include/libssh2.h: bump for release -- 0.11
+
+2005-07-05  Sara Golemon <pollita@libssh2.org>
+
+	* README: BFN
+
+2005-06-24  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/session.c, include/libssh2.h: libssh2_poll_channel_read made
+	external
+
+2005-06-24  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/packet.c: Debug output slightly fixed
+
+2005-06-24  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/channel.c, include/libssh2.h: Added
+	libssh2_channel_wait_close()
+
+2005-06-23  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/packet.c: Memory leak liquidated - free the
+	SSH_MSG_CHANNEL_REQUEST packet data after processing 'exit-status'
+	message
+
+2005-06-23  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/channel.c, src/packet.c, include/libssh2.h,
+	include/libssh2_priv.h: 'exit-status' information packet handling
+	added
+
+2005-06-20  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* include/libssh2.h: Added extern "C" declaration for C++
+	compatibility
+
+2005-06-18  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/userauth.c: Fixed keyboard-interactive authentication, debug
+	output added
+
+2005-06-18  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/userauth.c, include/libssh2.h: libssh2_userauth_list should
+	return char*, not the const char*
+
+2005-06-18  Mikhail Gusarov <dottedmag@dottedmag.net>
+
+	* src/channel.c, src/hostkey.c, src/kex.c, src/scp.c,
+	src/session.c, src/userauth.c, ssh2_sample.c, include/libssh2.h,
+	include/libssh2_priv.h: Strictening function prototypes: char* ->
+	const char* where applicable
+
+2005-06-17  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Don't send flags for rename op if the sftp
+	version is too low
+
+2005-06-16  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, src/userauth.c: Add abstract pointer to
+	keyboard-interactive callback
+
+2005-06-11  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h, README,
+	src/userauth.c: Add keyboard interactive authentication.
+	Implementation contributed by Mikhail Gusarov.
+
+2005-05-24  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in: Late commit -- This is for release 0.10
+
+2005-05-18  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c, src/packet.c: Drop these old references to initial
+	window size, they were a mistake
+
+2005-05-18  Sara Golemon <pollita@libssh2.org>
+
+	* README: BFN
+
+2005-05-18  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h, src/channel.c,
+	src/packet.c: Save up multiple small refunds in order to cut down
+	on unnecessary WINDOW_ADJUST packets
+
+2005-05-17  Sara Golemon <pollita@libssh2.org>
+
+	* src/sftp.c: Typo:  ALWAYS TEST FIRST
+
+2005-05-17  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Fix sftp packet queueing mechanism
+
+2005-05-16  Sara Golemon <pollita@libssh2.org>
+
+	* src/sftp.c, README: Reduce busy-looping of
+	libssh2_sftp_packet_requirev()
+
+2005-05-16  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/kex.c: Fix segfault when client/host can't agree on
+	hostkey/crypt/mac/comp
+
+2005-05-11  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c: Fix format specifiers
+
+2005-05-11  Sara Golemon <pollita@libssh2.org>
+
+	* src/misc.c: Whoops
+
+2005-05-11  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, include/libssh2_config.h.in,
+	include/libssh2_priv.h, src/channel.c, src/kex.c, src/misc.c,
+	src/packet.c, src/scp.c, src/session.c, src/sftp.c, src/userauth.c:
+	Add debugging hooks for development diagnostics
+
+2005-05-10  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Ignore extended data in the SFTP layer.
+
+2005-05-10  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: One last (better be last) fix for FXP_INIT
+
+2005-05-06  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/channel.c: More fixes for channel_write()
+
+2005-05-05  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in, include/libssh2.h: Bump for release
+
+2005-05-05  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in: Check for and link against libm and
+	libsocket
+
+2005-05-04  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c, README: Block means block
+
+2005-05-04  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/packet.c: Make blocking_read's polling loop less
+	arbitrary
+
+2005-05-04  Sara Golemon <pollita@libssh2.org>
+
+	* src/sftp.c: Put filetype into open/diropen/mkdir attributes
+
+2005-05-04  Sara Golemon <pollita@libssh2.org>
+
+	* src/sftp.c: Fix constant from last patch
+
+2005-05-03  Sara Golemon <pollita@libssh2.org>
+
+	* README: Late BFN
+
+2005-05-03  Sara Golemon <pollita@libssh2.org>
+
+	* src/sftp.c: FXP_INIT packet should not have had a request_id
+	component and sftp_packet_require shouldn't expect FXP_VERSION to
+	have one when coming back.  Thanks puudeli!
+
+2005-04-07  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Fixed SFTP to be properly BC with version 1
+	and 2 servers
+
+2005-04-05  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c: Block means block.
+
+2005-04-02  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c: break; fallthroughs in win32 code
+
+2005-04-01  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c, src/userauth.c: Phase II of packet loop migration:
+	Clean code is good code
+
+2005-04-01  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c: Another typo
+
+2005-04-01  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2_priv.h: typo
+
+2005-04-01  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c, include/libssh2_priv.h: Phase 1 of the Great
+	Timeout Cleanup
+
+2005-03-28  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c: Nix unused variable
+
+2005-03-28  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/channel.c: Add
+	libssh2_channel_window_(read|write)_ex()
+
+2005-03-26  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c: Nix the memset loop Speaking of which: Why wasn't
+	it JUST a memset() call?
+
+	The encrypted version of packet_write fills in this data with
+	OpenSSL RAND_bytes() data, and as far as the unencrypted version
+	goes? Well, it's unencrypted, randomness doesn't help at that point.
+
+2005-03-26  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/session.c: Don't let a dead
+	session leave poll() hanging
+
+2005-03-23  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in, include/libssh2.h: Bump for release
+
+2005-03-23  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, include/libssh2.h,
+	include/libssh2_config.h.in, src/session.c: Add libssh2_poll()
+
+2005-03-21  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, include/libssh2_config.h.in, src/hostkey.c,
+	src/packet.c, src/scp.c, src/userauth.c: Add sys/uio.h for FBSD
+	builds and remove old stdio references
+
+2005-03-17  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/comp.c: Swap compression mode preferences, prefer
+	none over zlib by default
+
+2005-03-17  Sara Golemon <pollita@libssh2.org>
+
+	* README: Late news
+
+2005-03-02  Sara Golemon <pollita@libssh2.org>
+
+	* src/hostkey.c: Possible fix for compatability with OpenSSL <
+	0.9.7
+
+2005-02-28  Sara Golemon <pollita@libssh2.org>
+
+	* src/comp.c: strm->next_out doesn't *stay* == out, only free out
+
+2005-02-18  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h,
+	include/libssh2_sftp.h, src/channel.c, src/comp.c, src/crypt.c,
+	src/hostkey.c, src/kex.c, src/mac.c, src/misc.c, src/packet.c,
+	src/scp.c, src/session.c, src/sftp.c, src/userauth.c, LICENSE:
+	Update copyright year
+
+2005-02-18  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, configure.in: Bump for release
+
+2005-02-18  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in: Add win32/ files to dist
+
+2005-02-18  Sara Golemon <pollita@libssh2.org>
+
+	* win32/config.mk: Genericise win32 build params
+
+2005-02-17  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, include/libssh2.h: Add support for
+	MacOSX(Darwin)
+
+2005-02-14  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/userauth.c, include/libssh2.h: Add support for
+	hostbased pubkey authentication
+
+2005-02-14  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/channel.c: Acknowledge window adjustments and fix the
+	paren bug I just introduced :)
+
+2005-02-14  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c: Fix extended data identification and make window
+	adjust always be sent
+
+2005-02-09  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, TODO: Remove TODO file
+
+2005-02-09  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in, include/libssh2.h: Bump for release
+
+2005-02-09  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h: These aren't meaningful since we don't bring
+	libssh2_config.h in
+
+2005-02-03  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, include/libssh2_priv.h, src/packet.c,
+	src/session.c: Added libssh2_session_flag() and
+	LIBSSH2_FLAG_SIGPIPE with hooks
+
+2005-02-03  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2_priv.h, README, src/kex.c, src/packet.c,
+	src/session.c, src/userauth.c: Collapse state flags into single
+	bitmask attribute
+
+2005-02-01  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/comp.c: Fix zlib compression when internal buffer not
+	empty
+
+2005-01-22  Edink Kadribasic
+
+	* win32/libssh2_config.h: Silence warnings when win32 is already
+	defined.  Enable zlib and newer diffie-hellman-group-exchange-sha1
+	syntax.
+
+2005-01-22  Edink Kadribasic
+
+	* win32/libssh2.dsp, win32/ssh2_sample.dsp: Adjust project files to
+	live in /win32
+
+2005-01-22  Edink Kadribasic
+
+	* win32/libssh2.dsp, win32/ssh2_sample.dsp: Correct line endings
+
+2005-01-21  Sara Golemon <pollita@libssh2.org>
+
+	* src/session.c, README: Avoid segfault when
+	libssh2_session_methods() called too early
+
+2005-01-20  Sara Golemon <pollita@libssh2.org>
+
+	* README: BFN
+
+2005-01-20  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c, src/packet.c: Handle Client-To-Server channel
+	windowing.
+
+2005-01-19  biot
+
+	* src/scp.c: Added a couple of comments to keep my
+	last-error-not-set-o-meter from going off
+
+2005-01-18  Sara Golemon <pollita@libssh2.org>
+
+	* src/session.c: Can't remember why I did this, banner should
+	always be sent before trying to receive
+
+2005-01-18  Sara Golemon <pollita@libssh2.org>
+
+	* src/hostkey.c: Simplify DSA signing process
+
+2005-01-18  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h: Fix u64int ifdef statement
+
+2005-01-11  Sara Golemon <pollita@libssh2.org>
+
+	* win32/libssh2.dsp, win32/libssh2.dsw, win32/ssh2_sample.dsp: Add
+	MSVC6 build files
+
+2005-01-11  Sara Golemon <pollita@libssh2.org>
+
+	* src/misc.c: Finish making msvc6 happy
+
+2005-01-11  Sara Golemon <pollita@libssh2.org>
+
+	* configure.in, include/libssh2.h: Bump for release (tardy)
+
+2005-01-11  Wez Furlong
+
+	* include/libssh2.h, include/libssh2_priv.h,
+	include/libssh2_sftp.h, src/sftp.c: be nice to msvc 6
+
+2005-01-11  Wez Furlong
+
+	* win32/config.mk: Add release build for win32
+
+2005-01-10  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h: Allow alternate API prefix from CFLAGS or
+	calling app
+
+2005-01-10  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in: Add dist_nmake target
+
+2005-01-07  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Fix setstat calls.  libssh2_attr2bin was
+	masking out flags
+
+2005-01-07  Sara Golemon <pollita@libssh2.org>
+
+	* src/hostkey.c, README: Need to load the cipher definitions if we
+	expect to use them...
+
+2005-01-07  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/hostkey.c: Fix ssh-dss public key authentication
+
+2005-01-06  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c: Ooops, this should have been hexits, not raw bytes
+
+2005-01-06  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h, src/channel.c,
+	src/packet.c, src/session.c: Add X11 forwarding support
+
+2005-01-03  Wez Furlong
+
+	* NMakefile, ssh2_sample.c, include/libssh2.h,
+	include/libssh2_priv.h, src/NMakefile, src/channel.c, src/packet.c,
+	src/session.c, src/sftp.c, win32/config.mk, win32/libssh2_config.h,
+	win32/rules.mk: Add support for win32.
+
+	Edit win32/config.mk to set the paths to your openssl and zlib
+	headers and libraries.
+
+	Then, from the root of the tree:
+
+		nmake -f NMakefile
+
+	voila.
+
+2005-01-01  Sara Golemon <pollita@libssh2.org>
+
+	* config.guess, config.sub: Ooops, forgot to add these
+
+2005-01-01  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, configure.in, include/libssh2.h,
+	include/libssh2_priv.h: Move towards a working win32 build
+
+2004-12-31  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, configure.in: Let ./configure populate VERSION in
+	Makefile
+
+2004-12-31  Sara Golemon <pollita@libssh2.org>
+
+	* INSTALL: Additional install docs
+
+2004-12-31  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2_priv.h, src/kex.c, src/mac.c: Added
+	support for MAC methods: hmac-md5 and hmac-md5-96
+
+	key_len should not have been in KEX_METHOD, it's dependent on MAC
+	method, not KEX method.
+
+	This is why the MD5 MACs were borked initially, md5 has a key_len of
+	16, not 20.
+
+2004-12-31  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h: APINO should have been bumped when
+	session_methods() proto was changed
+
+2004-12-31  Sara Golemon <pollita@libssh2.org>
+
+	* README, configure.in, include/libssh2.h,
+	include/libssh2_config.h.in: Add ./configure option
+	'--disable-gex-new' to fallback on older
+	diffie-hellman-group-exchange-sha1 syntax.
+
+	i.e. Use SSH_MSG_KEX_DH_GEX_REQUEST_OLD rather then
+	SSH_MSG_KEX_DH_GEX_REQUEST
+
+	See draft-ietf-secsh-dh-group-exchange section 7 for details.
+
+2004-12-30  Sara Golemon <pollita@libssh2.org>
+
+	* README: Note change to libssh2_session_methods()
+
+2004-12-30  biot
+
+	* include/libssh2.h, src/session.c: Changed
+	libssh2_session_methods() to use method_type parameter
+
+2004-12-30  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, src/kex.c: Add error codes to
+	session_method_pref()
+
+2004-12-29  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h, README, src/channel.c,
+	src/packet.c, src/session.c: Add remote tcp/ip forwarding.
+
+2004-12-27  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/kex.c, src/packet.c: use actual random data with
+	KEX_INIT cookie and packet padding
+
+2004-12-26  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, README, src/Makefile.in: Add DESTDIR support during
+	'make install' (Adam Go³êbiowski)
+
+2004-12-24  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, configure.in, include/libssh2.h: Bump for release
+
+2004-12-24  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/session.c: Added
+	libssh2_banner_set()
+
+2004-12-24  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Fixed leak in sftp_symlink_ex(), result for
+	READLINK and REALPATH not freed unless there was an error.
+
+2004-12-24  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Plug leak in handle string provided by
+	sftp_open
+
+2004-12-24  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/sftp.c: Fix crash in sftp_close_handle.
+
+	Don't free dir handle data when it's not a dir handle!
+
+2004-12-23  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, TODO, configure.in, include/libssh2.h: Bump version
+	for release and remove SFTP from TODO list
+
+2004-12-23  Sara Golemon <pollita@libssh2.org>
+
+	* README, src/packet.c: Make libssh2_packet_read() use a static
+	buffer to avoid unnecessary alloc and free calls.
+
+	Since the cipher and mac layers aren't runtime extensible (yet) and
+	we know neither of these works in sizes greater than 32, we can
+	safely set aside a 64 byte block of data on the stack for crypting
+	and hashing.
+
+	This will make a big difference during quasi-non-blocking reads
+	where libssh2_packet_read() is polled repeatedly.
+
+2004-12-22  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2_sftp.h, src/sftp.c: Expose specific SFTP error
+	codes to the calling program
+
+2004-12-22  Sara Golemon <pollita@libssh2.org>
+
+	* LICENSE, configure.in, include/libssh2.h, include/libssh2_priv.h,
+	include/libssh2_sftp.h, src/channel.c, src/comp.c, src/crypt.c,
+	src/hostkey.c, src/kex.c, src/mac.c, src/misc.c, src/packet.c,
+	src/scp.c, src/session.c, src/sftp.c, src/userauth.c: Update
+	contact info with new domain
+
+2004-12-22  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, README, include/libssh2.h, include/libssh2_priv.h,
+	include/libssh2_sftp.h, src/Makefile.in, src/misc.c, src/sftp.c:
+	Add SFTP support
+
+2004-12-20  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2_priv.h: Fix LIBSSH2_CHANNEL_CLOSE for the LAST
+	TIME.
+
+2004-12-20  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h: Ooops, try that
+	again...
+
+2004-12-20  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, include/libssh2_priv.h, src/channel.c,
+	src/scp.c: Fixes: scp blocking modes, MacError abstract indirection
+	Additions: Channel Close callback
+
+2004-12-18  Sara Golemon <pollita@libssh2.org>
+
+	* src/packet.c, include/libssh2.h: A broken decrypt (or false
+	packet) could cause an unreasonably large block of memory to be
+	allocated leading to indeterminate results.
+
+	SSH-TRANS only requires implementations to handle about about 32k
+	compressed length per packet.  Allow 40k to be safe, but no more.
+
+2004-12-18  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c, README: Fixed polling error in
+	libssh2_channel_read_ex()
+
+2004-12-17  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c: Packet queueing mechanism allows data which
+	immediately follows open confirmation to get ignored.  Work around
+	this by adding the channel to the list before opening it.
+
+2004-12-17  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in, configure.in, include/libssh2.h: Bump version for
+	release
+
+2004-12-16  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c: Fix return code in libssh2_channel_write_ex()
+
+2004-12-16  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/session.c: Changed
+	libssh2_session_disconnect_ex() to return an error code on failed
+	alloc.
+
+2004-12-16  Sara Golemon <pollita@libssh2.org>
+
+	* src/hostkey.c: Correct comments for hostkey_hash
+
+2004-12-16  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/session.c: Add
+	libssh2_session_last_error()
+
+2004-12-10  Sara Golemon <pollita@libssh2.org>
+
+	* src/userauth.c: This initialization was based on an earlier
+	concept
+
+2004-12-09  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/session.c: Added
+	libssh2_session_abstract()
+
+2004-12-09  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, include/libssh2_priv.h, src/kex.c,
+	src/session.c: Add libssh2_session_method_pref() and
+	libssh2_session_methods().
+
+	Specify methods to be used and retreive what methods were
+	negotiated.
+
+2004-12-09  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h: Let the calling program know what methods we
+	support
+
+2004-12-09  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/session.c: Added
+	libssh2_session_callback_set()
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* README, include/libssh2.h, src/channel.c: Add flush mechanism to
+	the channel API
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* README: Update changelog
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h, src/channel.c,
+	src/packet.c: Change extended data ignore to allow merging extended
+	data into the primary stream
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* Makefile.in: Add INSTALL, and remove configure.in from 'make
+	dist'
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* INSTALL: Basic Instructions
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, Makefile.in: Bump version for release
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* include/libssh2.h, include/libssh2_priv.h, src/channel.c,
+	src/packet.c: Add "ignore extended data" option to avoid having
+	stderr data fill up the receive window and leaving no room for stdio
+	data.
+
+2004-12-08  Sara Golemon <pollita@libssh2.org>
+
+	* src/channel.c: Plug memory leaks in request_pty and
+	channel->channel_type
+
+2004-12-07  Sara Golemon <pollita@libssh2.org>
+
+	* LICENSE, Makefile.in, README, TODO, configure.in, install-sh,
+	mkinstalldirs, ssh2_sample.c, include/libssh2.h,
+	include/libssh2_config.h.in, include/libssh2_priv.h,
+	src/Makefile.in, src/channel.c, src/comp.c, src/crypt.c,
+	src/hostkey.c, src/kex.c, src/mac.c, src/misc.c, src/packet.c,
+	src/scp.c, src/session.c, src/userauth.c: Initial Import.
+
+2004-12-07  Sara Golemon <pollita@libssh2.org>
+
+	* LICENSE, Makefile.in, README, TODO, configure.in, install-sh,
+	mkinstalldirs, ssh2_sample.c, include/libssh2.h,
+	include/libssh2_config.h.in, include/libssh2_priv.h,
+	src/Makefile.in, src/channel.c, src/comp.c, src/crypt.c,
+	src/hostkey.c, src/kex.c, src/mac.c, src/misc.c, src/packet.c,
+	src/scp.c, src/session.c, src/userauth.c: Initial revision
+
