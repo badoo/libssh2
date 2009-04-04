@@ -893,6 +893,13 @@ struct _LIBSSH2_SESSION
     char *scpSend_err_msg;
     long scpSend_err_len;
     LIBSSH2_CHANNEL *scpSend_channel;
+
+    /* State variable for last IO operation */
+    int lastIO_state;
+
+    /* State variables used in libssh2_userauth_sign_with_agent */
+    libssh2_nonblocking_states agent_state;
+
 };
 
 /* session.state bits */

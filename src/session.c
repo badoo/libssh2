@@ -110,6 +110,7 @@ libssh2_banner_receive(LIBSSH2_SESSION * session)
         ret =
             recv(session->socket_fd, &c, 1,
                  LIBSSH2_SOCKET_RECV_FLAGS(session));
+        session->lastIO_state = LIBSSH2_LAST_IO_RECV;
 
         if (ret < 0) {
 #ifdef WIN32
@@ -233,6 +234,7 @@ libssh2_banner_send(LIBSSH2_SESSION * session)
         send(session->socket_fd, banner + session->banner_TxRx_total_send,
              banner_len - session->banner_TxRx_total_send,
              LIBSSH2_SOCKET_SEND_FLAGS(session));
+    session->lastIO_state = LIBSSH2_LAST_IO_SEND;
 
     if (ret != (banner_len - session->banner_TxRx_total_send)) {
         if ((ret > 0) || ((ret == -1) && (errno == EAGAIN))) {
@@ -1115,6 +1117,17 @@ LIBSSH2_API int
 libssh2_session_last_errno(LIBSSH2_SESSION * session)
 {
     return session->err_code;
+}
+
+/* }}} */
+
+/* {{{ libssh2_session_last_io
+* Returns last IO operation
+*/
+LIBSSH2_API int
+libssh2_session_last_io(LIBSSH2_SESSION * session)
+{
+    return session->lastIO_state;
 }
 
 /* }}} */

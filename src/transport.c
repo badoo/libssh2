@@ -361,6 +361,7 @@ libssh2_packet_read(LIBSSH2_SESSION * session)
                 recv(session->socket_fd, &p->buf[remainbuf],
                      PACKETBUFSIZE - remainbuf,
                      LIBSSH2_SOCKET_RECV_FLAGS(session));
+            session->lastIO_state = LIBSSH2_LAST_IO_RECV;
             if (nread <= 0) {
                 /* check if this is due to EAGAIN and return the special
                    return code if so, error out normally otherwise */
@@ -622,6 +623,7 @@ send_existing(LIBSSH2_SESSION * session, unsigned char *data,
 
     rc = send(session->socket_fd, &p->outbuf[p->osent], length,
               LIBSSH2_SOCKET_SEND_FLAGS(session));
+    session->lastIO_state = LIBSSH2_LAST_IO_SEND;
 
     if (rc == length) {
         /* the remainder of the package was sent */
@@ -785,6 +787,7 @@ libssh2_packet_write(LIBSSH2_SESSION * session, unsigned char *data,
 
     ret = send(session->socket_fd, p->outbuf, total_length,
                LIBSSH2_SOCKET_SEND_FLAGS(session));
+    session->lastIO_state = LIBSSH2_LAST_IO_SEND;
 
     if (ret != -1) {
         debugdump(session, "libssh2_packet_write send()", p->outbuf, ret);

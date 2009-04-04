@@ -995,41 +995,53 @@ libssh2_userauth_publickey_fromfile_ex(LIBSSH2_SESSION * session,
         LIBSSH2_FREE(session, session->userauth_pblc_data);
         session->userauth_pblc_data = NULL;
 
-        if (libssh2_file_read_privatekey
-            (session, &privkeyobj, &abstract, session->userauth_pblc_method,
-             session->userauth_pblc_method_len, privatekey, passphrase)) {
-            LIBSSH2_FREE(session, session->userauth_pblc_method);
-            session->userauth_pblc_method = NULL;
-            LIBSSH2_FREE(session, session->userauth_pblc_packet);
-            session->userauth_pblc_packet = NULL;
-            session->userauth_pblc_state = libssh2_NB_state_idle;
-            return -1;
-        }
+        if (privatekey != NULL) {
+            if (libssh2_file_read_privatekey
+                    (session, &privkeyobj, &abstract, session->userauth_pblc_method,
+                     session->userauth_pblc_method_len, privatekey, passphrase)) {
+                LIBSSH2_FREE(session, session->userauth_pblc_method);
+                session->userauth_pblc_method = NULL;
+                LIBSSH2_FREE(session, session->userauth_pblc_packet);
+                session->userauth_pblc_packet = NULL;
+                session->userauth_pblc_state = libssh2_NB_state_idle;
+                return -1;
+            }
 
-        *session->userauth_pblc_b = 0x01;
+            *session->userauth_pblc_b = 0x01;
 
-        libssh2_htonu32(buf, session->session_id_len);
-        datavec[0].iov_base = buf;
-        datavec[0].iov_len = 4;
-        datavec[1].iov_base = session->session_id;
-        datavec[1].iov_len = session->session_id_len;
-        datavec[2].iov_base = session->userauth_pblc_packet;
-        datavec[2].iov_len = session->userauth_pblc_packet_len;
+            libssh2_htonu32(buf, session->session_id_len);
+            datavec[0].iov_base = buf;
+            datavec[0].iov_len = 4;
+            datavec[1].iov_base = session->session_id;
+            datavec[1].iov_len = session->session_id_len;
+            datavec[2].iov_base = session->userauth_pblc_packet;
+            datavec[2].iov_len = session->userauth_pblc_packet_len;
 
-        if (privkeyobj->signv(session, &sig, &sig_len, 3, datavec, &abstract)) {
-            LIBSSH2_FREE(session, session->userauth_pblc_method);
-            session->userauth_pblc_method = NULL;
-            LIBSSH2_FREE(session, session->userauth_pblc_packet);
-            session->userauth_pblc_packet = NULL;
+            if (privkeyobj->signv(session, &sig, &sig_len, 3, datavec, &abstract)) {
+                LIBSSH2_FREE(session, session->userauth_pblc_method);
+                session->userauth_pblc_method = NULL;
+                LIBSSH2_FREE(session, session->userauth_pblc_packet);
+                session->userauth_pblc_packet = NULL;
+                if (privkeyobj->dtor) {
+                    privkeyobj->dtor(session, &abstract);
+                }
+                session->userauth_pblc_state = libssh2_NB_state_idle;
+                return -1;
+            }
+
             if (privkeyobj->dtor) {
                 privkeyobj->dtor(session, &abstract);
             }
-            session->userauth_pblc_state = libssh2_NB_state_idle;
-            return -1;
-        }
-
-        if (privkeyobj->dtor) {
-            privkeyobj->dtor(session, &abstract);
+        } else {
+            /* Getting sig from agent. */
+            int ret;
+            ret = libssh2_userauth_sign_with_agent(session,
+                                                   username, username_len,
+                                                   &sig, &sig_len);
+            if (ret == -1) {
+                session->userauth_pblc_state = libssh2_NB_state_idle;
+                return -1;
+            }
         }
 
 	/* 
