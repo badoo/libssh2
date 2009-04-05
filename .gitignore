@@ -14,4 +14,7 @@ missing
 libtool
 install-sh
 cscope.out
+INSTALL
+depcomp
+ltmain.sh
 

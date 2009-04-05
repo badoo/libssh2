@@ -1,0 +1,17 @@
+.deps
+.libs
+config.h.in
+scp
+scp_nonblock
+scp_write
+scp_write_nonblock
+sftp
+sftp_RW_nonblock
+sftp_mkdir
+sftp_mkdir_nonblock
+sftp_nonblock
+sftp_write
+sftp_write_nonblock
+sftpdir
+sftpdir_nonblock
+ssh2
