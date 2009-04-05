@@ -310,6 +310,11 @@ typedef struct _LIBSSH2_POLLFD {
 #define LIBSSH2_ERROR_PUBLICKEY_PROTOCOL        -36
 #define LIBSSH2_ERROR_EAGAIN                    -37
 
+/* Last IO operation */
+#define LIBSSH2_LAST_IO_NONE                    0
+#define LIBSSH2_LAST_IO_SEND                    1
+#define LIBSSH2_LAST_IO_RECV                    2
+
 /* Session API */
 LIBSSH2_API LIBSSH2_SESSION *libssh2_session_init_ex(LIBSSH2_ALLOC_FUNC((*my_alloc)), LIBSSH2_FREE_FUNC((*my_free)), LIBSSH2_REALLOC_FUNC((*my_realloc)), void *abstract);
 #define libssh2_session_init()                      libssh2_session_init_ex(NULL, NULL, NULL, NULL)
@@ -329,6 +334,7 @@ LIBSSH2_API int libssh2_session_method_pref(LIBSSH2_SESSION *session, int method
 LIBSSH2_API const char *libssh2_session_methods(LIBSSH2_SESSION *session, int method_type);
 LIBSSH2_API int libssh2_session_last_error(LIBSSH2_SESSION *session, char **errmsg, int *errmsg_len, int want_buf);
 LIBSSH2_API int libssh2_session_last_errno(LIBSSH2_SESSION *session);
+LIBSSH2_API int libssh2_session_last_io(LIBSSH2_SESSION *session);
 LIBSSH2_API int libssh2_session_block_directions(LIBSSH2_SESSION *session);
 
 LIBSSH2_API int libssh2_session_flag(LIBSSH2_SESSION *session, int flag, int value);
@@ -351,6 +357,11 @@ LIBSSH2_API int libssh2_userauth_hostbased_fromfile_ex(LIBSSH2_SESSION *session,
                                                                                  const char *local_username, unsigned int local_username_len);
 #define libssh2_userauth_hostbased_fromfile(session, username, publickey, privatekey, passphrase, hostname) \
         libssh2_userauth_hostbased_fromfile_ex((session), (username), strlen(username), (publickey), (privatekey), (passphrase), (hostname), strlen(hostname), (username), strlen(username))
+
+LIBSSH2_API int libssh2_userauth_sign_with_agent(LIBSSH2_SESSION * session, const char *username,
+                                                 unsigned int username_len,
+                                                 unsigned char **signature,
+                                                 unsigned long *signature_len);
 
 /*
  * response_callback is provided with filled by library prompts array,
