@@ -118,7 +118,7 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
     /* Get public keys from agent. */
     if (session->agent_state == libssh2_NB_state_created) {
         memset(agbuf, 0, sizeof(agbuf));
-        libssh2_htonu32(agbuf, 1);
+		_libssh2_htonu32(agbuf, 1);
         agbuf[4] = SSH2_AGENTC_REQUEST_IDENTITIES;
         write(sock, agbuf, 5);
         session->agent_state = libssh2_NB_state_sent1;
@@ -126,7 +126,7 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
 
     if (session->agent_state == libssh2_NB_state_sent1) {
         read(sock, agbuf, 4);
-        len = libssh2_ntohu32(agbuf);
+        len = _libssh2_ntohu32(agbuf);
         read(sock, agbuf, len);
 
         debugdump(session, "pubkey from agent", agbuf, len);
@@ -135,13 +135,13 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
             _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "Bad authentication reply message type: %d", agbuf[0]);
             return -1;
         }
-        pub_key_cnt = libssh2_ntohu32(agbuf+1);
+        pub_key_cnt = _libssh2_ntohu32(agbuf+1);
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "found %d keys", pub_key_cnt);
         if (pub_key_cnt == 0) {
             /* No key found. */
             return -1;
         }
-        pub_key_len = libssh2_ntohu32(agbuf+5);
+        pub_key_len = _libssh2_ntohu32(agbuf+5);
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "pub_key_len %d", pub_key_len);
         pub_key = LIBSSH2_ALLOC(session, pub_key_len);
         memcpy(pub_key, agbuf+9, pub_key_len);
@@ -150,9 +150,9 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
         agbuf[0] = SSH_AGENTC_SIGN_REQUEST;
         p = agbuf + 1;
 
-        libssh2_htonu32(p, pub_key_len);
+        _libssh2_htonu32(p, pub_key_len);
         p += 4;
-        libssh2_htonu32(p, session->userauth_pblc_method_len);
+        _libssh2_htonu32(p, session->userauth_pblc_method_len);
         p += 4;
         memcpy(p, session->userauth_pblc_method, session->userauth_pblc_method_len);
         p += session->userauth_pblc_method_len;
@@ -166,10 +166,10 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
 
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "len: %d", len);
 
-        libssh2_htonu32(p, len);
+        _libssh2_htonu32(p, len);
         p += 4;
 
-        libssh2_htonu32(p, session->session_id_len);
+        _libssh2_htonu32(p, session->session_id_len);
         p += 4;
         memcpy(p, session->session_id, session->session_id_len);
         p += session->session_id_len;
@@ -177,29 +177,29 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
         *p = SSH_MSG_USERAUTH_REQUEST;
         p++;
 
-        libssh2_htonu32(p, username_len);
+        _libssh2_htonu32(p, username_len);
         p += 4;
         memcpy(p, username, username_len);
         p += username_len;
-        libssh2_htonu32(p, strlen("ssh-connection"));
+        _libssh2_htonu32(p, strlen("ssh-connection"));
         p += 4;
         memcpy(p, "ssh-connection", strlen("ssh-connection"));
         p += strlen("ssh-connection");
-        libssh2_htonu32(p, strlen("publickey"));
+        _libssh2_htonu32(p, strlen("publickey"));
         p += 4;
         memcpy(p, "publickey", strlen("publickey"));
         p += strlen("publickey");
         *p = 1;
         p += 1;
 
-        libssh2_htonu32(p, session->userauth_pblc_method_len);
+        _libssh2_htonu32(p, session->userauth_pblc_method_len);
         p += 4;
         memcpy(p, session->userauth_pblc_method, session->userauth_pblc_method_len);
         p += session->userauth_pblc_method_len;
 
-        libssh2_htonu32(p, pub_key_len);
+        _libssh2_htonu32(p, pub_key_len);
         p += 4;
-        libssh2_htonu32(p, session->userauth_pblc_method_len);
+        _libssh2_htonu32(p, session->userauth_pblc_method_len);
         p += 4;
         memcpy(p, session->userauth_pblc_method, session->userauth_pblc_method_len);
         p += session->userauth_pblc_method_len;
@@ -207,11 +207,11 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
         p += pub_key_len-11;
 
         /* Flags. */
-        libssh2_htonu32(p, 0);
+        _libssh2_htonu32(p, 0);
         p += 4;
 
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "len = %d", p - agbuf);
-        libssh2_htonu32(xxx, p - agbuf);
+        _libssh2_htonu32(xxx, p - agbuf);
         write(sock, xxx, 4);
 
         len = write(sock, agbuf, p - agbuf);
@@ -219,11 +219,11 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
         session->agent_state = libssh2_NB_state_sent2;
     }
 
-    if (session->agent_state = libssh2_NB_state_sent2) {
+    if (session->agent_state == libssh2_NB_state_sent2) {
         read(sock, agbuf, 4);
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "%02X %02X %02X %02X",
                        agbuf[0], agbuf[1], agbuf[2], agbuf[3]);
-        len = libssh2_ntohu32(agbuf);
+        len = _libssh2_ntohu32(agbuf);
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "ret len: %d", len);
         read(sock, agbuf, len);
         if (agbuf[0] != SSH2_AGENT_SIGN_RESPONSE) {

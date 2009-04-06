@@ -1,3 +1,490 @@
+2009-04-02  Daniel Stenberg
+
+	* NEWS, include/libssh2.h: release 1.1
+
+2009-03-31  Daniel Stenberg
+
+	* example/simple/sftp.c, example/simple/sftp_write.c,
+	example/simple/sftp_write_nonblock.c: Sofian Brabez removed
+	duplicate calls to libssh2_session_set_blocking()
+
+2009-03-31  Daniel Stenberg
+
+	* src/channel.c: Uh, it is important that we don't set the local
+	state 'local.close' to TRUE until _after_ we're done as otherwise we
+	might not get called again properly to clean the entire thing since
+	the close state is checked in libssh2_channel_free
+
+2009-03-30  Daniel Stenberg
+
+	* src/packet.c: Removed the trace output that said "May block until
+	packet of type..." since it simply wasn't true for non-blocking
+	operations.
+
+2009-03-29  Daniel Stenberg
+
+	* src/channel.c, src/channel.h, src/sftp.c: made sure the SFTP code
+	makes more use of internal non-blocking functions instead of the
+	external API entries
+
+2009-03-28  Daniel Stenberg
+
+	* NEWS, src/userauth.c: Fixed the memory leak in in
+	libssh2_userauth_hostbased_fromfile_ex() that Jean-Louis Charton
+	found. Additional minor indent and comment edits.
+
+2009-03-28  Daniel Stenberg
+
+	* src/userauth.c: indent changes and removed libssh2_ prefix from
+	static function
+
+2009-03-28   Yang Tse
+
+	* src/version.c: include libssh2_priv.h instead of libssh2.h in
+	order to get LIBSSH2_API properly defined on LIBSSH2_WIN32 build
+	targets
+
+2009-03-27  Daniel Stenberg
+
+	* src/channel.c, src/channel.h, src/sftp.c: Additional non-blocking
+	fixes.
+
+2009-03-27  Daniel Stenberg
+
+	* src/sftp.c: Me and my long fingers couldn't resist "merging"
+	these statements in a previous commit but of course that broke
+	functionality and this is a revert of that change.
+
+2009-03-27  Daniel Stenberg
+
+	* src/transport.c: Dump to stderr simply because the other tracing
+	functions in misc.c already use stderr and mixing output "channels"
+	causes too much confusion for me!
+
+2009-03-27  Daniel Stenberg
+
+	* src/channel.c, src/channel.h, src/session.c, src/sftp.c: fixed
+	sftp_shutdown() for the blockiness and fixed libssh2_channel_close()
+	to work properly non-blocking
+
+2009-03-27  Daniel Stenberg
+
+	* src/libssh2_priv.h: Fixed the order of the check in the
+	BLOCK_ADJUST() macro so that it also works for
+	libssh2_session_free()
+
+2009-03-27  Daniel Stenberg
+
+	* tests/simple.c: kill warnings
+
+2009-03-27  Daniel Stenberg
+
+	* src/libssh2_priv.h: Fix the BLOCK_ADJUST_ERRNO() macro to behave
+	properly in blocking mode.
+
+2009-03-27  Simon Josefsson <simon@josefsson.org>
+
+	* configure.in: Add AC_CONFIG_MACRO_DIR to avoid warnings with
+	libtool v2.2.x.
+
+2009-03-27  Daniel Stenberg
+
+	* src/kex.c, src/libssh2_priv.h, src/misc.c, src/session.c,
+	src/sftp.c: fix comments, moved to htonu64 function to sftp.c and
+	made it static
+
+2009-03-26  Daniel Stenberg
+
+	* src/Makefile.am, src/comp.h, src/kex.c, src/libssh2_priv.h,
+	src/mac.c, src/mac.h: More cleaning up converting libssh2_ to
+	_libssh2_ for internal functions and removing libssh2_ from static
+	functions. Added mac.h.
+
+2009-03-26  Daniel Stenberg
+
+	* src/Makefile.am, src/comp.c, src/comp.h, src/kex.c: comp.c only
+	as a single _libssh2_ function, no external one
+
+2009-03-26  Daniel Stenberg
+
+	* NEWS, TODO, docs/Makefile.am,
+	docs/libssh2_channel_handle_extended_data.3,
+	docs/libssh2_channel_receive_window_adjust.3,
+	docs/libssh2_channel_receive_window_adjust2.3,
+	docs/libssh2_channel_set_blocking.3, include/libssh2.h,
+	src/Makefile.am, src/channel.c, src/channel.h, src/kex.c,
+	src/libssh2_priv.h, src/packet.c, src/session.c, src/sftp.c,
+	src/transport.c, src/transport.h, src/userauth.c:
+	* Renamed the functions in src/transport.c to be _libssh2_transport_
+	  prefixed and introduced a transport.h header.
+
+	* Fixed the blocking mode to only change behavior not the actual
+	  underlying socket mode so we now always work with non-blocking
+	  sockets. This also introduces a new rule of thumb in libssh2 code:
+	  we don't call the external function calls internally. We use the
+	  internal (non-blocking) ones!
+
+	* libssh2_channel_receive_window_adjust2 was added and
+	  libssh2_channel_receive_window_adjust is now deprecated
+
+	* Introduced "local" header files with prototypes etc for different
+	  parts instead of cramming everything into libssh2_priv.h. channel.h
+	  is the first.
+
+2009-03-25  Daniel Stenberg
+
+	* example/simple/scp_nonblock.c: avoid some busy-looping
+
+2009-03-23  Daniel Stenberg
+
+	* TODO: one function to remove, one proto to correct
+
+2009-03-23  Daniel Stenberg
+
+	* src/sftp.c: Updated comments and removed "libssh2_" prefixes from
+	static functions
+
+2009-03-23  Daniel Stenberg
+
+	* docs/libssh2_session_get_blocking.3: added basic docs
+
+2009-03-23  Daniel Stenberg
+
+	* docs/libssh2_session_flag.3: quite possibly one of the most
+	pointless functions in the libssh2 API...a
+
+2009-03-23  Daniel Stenberg
+
+	* src/misc.c: ENOTCONN obviously doesn't exist in win32 so don't
+	try to map that
+
+2009-03-23  Daniel Stenberg
+
+	* src/channel.c: [no comment]
+
+2009-03-23  Daniel Stenberg
+
+	* src/channel.c: EEK revert the part of the previous commit that
+	was just my non-functional attempts to make things work with
+	blocking sockets.
+
+2009-03-23  Daniel Stenberg
+
+	* src/channel.c, src/libssh2_priv.h, src/packet.c: I cut out the
+	poll_socket argument from the protos for_libssh2_packet_askv() and
+	_libssh2_packet_ask() since they are internal and nothing in the
+	code base uses that functionality == simplicity with no drawbacks!
+
+2009-03-19  Daniel Stenberg
+
+	* src/libssh2_priv.h, src/misc.c: pass in unsigned ints for u32
+	values and not longs
+
+2009-03-19  Daniel Stenberg
+
+	* NEWS, src/libssh2_priv.h, src/misc.c, src/session.c,
+	src/transport.c:
+	- (Mar 19 2009) Daniel Stenberg: based on a patch by "E L" we now
+	  use errno properly after recv() and send() calls (that internally
+	  are now known as _libssh2_recv() and _libssh2_send()) so that the
+	  API and more works fine on windows too!
+
+2009-03-18  Daniel Stenberg
+
+	* AUTHORS: I'm upgrading myself!
+
+2009-03-17  Simon Josefsson <simon@josefsson.org>
+
+	* tests/ssh2.sh: Add StrictModes=no to work around cygwin problem.
+	Reported by Yang Tse <yangsita@gmail.com>.
+
+2009-03-17  Simon Josefsson <simon@josefsson.org>
+
+	* tests/ssh2.sh: Add UsePrivilegeSeparation=no for cygwin.
+	Reported by Yang Tse <yangsita@gmail.com>
+
+2009-03-17  Daniel Stenberg
+
+	* src/packet.c: re-indented for clarity
+
+2009-03-17  Daniel Stenberg
+
+	* src/channel.c: re-indented _libssh2_channel_packet_data_len()
+	somewhat to make the huge condition somewhat easier on the eye
+
+2009-03-17  Daniel Stenberg
+
+	* src/channel.c, src/comp.c, src/crypt.c, src/hostkey.c, src/kex.c,
+	src/libssh2_priv.h, src/mac.c, src/misc.c, src/openssl.h,
+	src/packet.c, src/publickey.c, src/scp.c, src/session.c,
+	src/sftp.c, src/transport.c, src/userauth.c: A cleanup effort:
+	libssh2_ prefixes only on external APIs. Use _libssh2_ prefix for
+	library-wide internal functions. Don't use any of those on static
+	functions.  I also did some comments and whitespace changes.
+
+2009-03-17  Daniel Stenberg
+
+	* include/libssh2.h: bump packet default size to 32768
+
+2009-03-17  Daniel Stenberg
+
+	* docs/libssh2_banner_set.3,
+	docs/libssh2_channel_direct_tcpip_ex.3,
+	docs/libssh2_channel_open_ex.3, docs/libssh2_hostkey_hash.3,
+	docs/libssh2_scp_recv.3, docs/libssh2_scp_send_ex.3,
+	docs/libssh2_session_block_directions.3,
+	docs/libssh2_session_callback_set.3,
+	docs/libssh2_session_disconnect_ex.3,
+	docs/libssh2_session_last_errno.3,
+	docs/libssh2_session_last_error.3,
+	docs/libssh2_session_method_pref.3, docs/libssh2_session_methods.3,
+	docs/libssh2_sftp_close_handle.3, docs/libssh2_sftp_read.3,
+	docs/libssh2_sftp_seek.3, docs/libssh2_sftp_tell.3,
+	docs/libssh2_sftp_tell64.3, docs/libssh2_sftp_write.3,
+	docs/libssh2_userauth_authenticated.3,
+	docs/libssh2_userauth_keyboard_interactive_ex.3,
+	docs/libssh2_userauth_list.3, docs/libssh2_userauth_password_ex.3,
+	docs/libssh2_userauth_publickey_fromfile_ex.3: Refer to the exact
+	symbol name, which also is the exact file name of the man page file.
+
+2009-03-17  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS, src/Makefile.am: Use libtool -export-symbols-regex to
+	reduce numer of exported symbols.
+
+2009-03-16  Daniel Stenberg
+
+	* docs/libssh2_channel_close.3, docs/libssh2_channel_eof.3,
+	docs/libssh2_channel_forward_accept.3,
+	docs/libssh2_channel_forward_cancel.3,
+	docs/libssh2_channel_process_startup.3,
+	docs/libssh2_channel_receive_window_adjust.3,
+	docs/libssh2_channel_request_pty_ex.3,
+	docs/libssh2_channel_setenv_ex.3,
+	docs/libssh2_channel_window_read_ex.3,
+	docs/libssh2_channel_window_write_ex.3,
+	docs/libssh2_channel_write_ex.3, docs/libssh2_channel_x11_req_ex.3,
+	docs/libssh2_scp_recv.3, docs/libssh2_scp_send_ex.3,
+	docs/libssh2_session_free.3, docs/libssh2_session_set_blocking.3,
+	docs/libssh2_session_startup.3, docs/libssh2_sftp_close_handle.3,
+	docs/libssh2_sftp_fstat_ex.3, docs/libssh2_sftp_init.3,
+	docs/libssh2_sftp_mkdir_ex.3, docs/libssh2_sftp_open_ex.3,
+	docs/libssh2_sftp_read.3, docs/libssh2_sftp_readdir_ex.3,
+	docs/libssh2_sftp_seek.3: cleanup round
+
+2009-03-16  Daniel Stenberg
+
+	* NEWS, docs/Makefile.am,
+	docs/libssh2_channel_request_pty_size_ex.3,
+	docs/libssh2_free_host_entry.3, docs/libssh2_host_entry_match.3,
+	docs/libssh2_new_host_entry.3, docs/libssh2_publickey_add_ex.3,
+	docs/libssh2_publickey_init.3, docs/libssh2_publickey_list_fetch.3,
+	docs/libssh2_publickey_list_free.3,
+	docs/libssh2_publickey_remove_ex.3,
+	docs/libssh2_publickey_shutdown.3, docs/libssh2_session_flag.3,
+	docs/libssh2_session_get_blocking.3,
+	docs/libssh2_userauth_hostbased_fromfile_ex.3: Added (templates
+	for) the 13 missing man pages
+
+2009-03-16  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_session_init.3,
+	docs/libssh2_session_init_ex.3,
+	docs/libssh2_userauth_publickey_fromfile.3,
+	docs/libssh2_userauth_publickey_fromfile_ex.3: two more renaming of
+	man pages to the actual function name
+
+2009-03-16  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_sftp_readdir.3,
+	docs/libssh2_sftp_readdir_ex.3: rename the man page to use the same
+	name as the actual function
+
+2009-03-16  Daniel Stenberg
+
+	* NEWS: mention the basic changes in my previous few commits
+
+2009-03-15  Daniel Stenberg
+
+	* src/scp.c: Patch from bug report #1960894 by "Heiner" applied,
+	and edited by me. It makes SCP recv and send deal with file names
+	containing spaces (and other shell-special letters) by quoting them
+	before they are passed to the remote server.
+
+2009-03-15  Daniel Stenberg
+
+	* src/scp.c: fixed some wrong comments and did a minor code edit
+	and some further whitespace changes
+
+2009-03-15  Daniel Stenberg
+
+	* docs/Makefile.am, docs/libssh2_channel_receive_window_adjust.3,
+	docs/libssh2_channel_window_read_ex.3,
+	docs/libssh2_channel_window_write_ex.3: added three more public
+	functions I found lacking man pages
+
+2009-03-15  Daniel Stenberg
+
+	* src/scp.c: fix a compiler warning
+
+2009-03-15  Daniel Stenberg
+
+	* src/scp.c: simplified how the "scp" command line is created in
+	the libssh2_scp_recv() function
+
+2009-03-15  Daniel Stenberg
+
+	* src/channel.c, src/libssh2_priv.h: Simplified
+	libssh2_channel_read_ex() and made it send window adjustments less
+	frequent, use a few less struct fields in the channel struct and
+	improved reading from the network with libssh2_packet_read(). I also
+	modified the windowing algorithm and now use a much larger window.
+	This greatly enhances SSH/SCP performance. I also increased the size
+	of the buffer the transport layer uses from 4k to 16K.
+
+2009-03-14  Daniel Stenberg
+
+	* src/misc.c: oops, use %06d for the microseconds!
+
+2009-03-14  Daniel Stenberg
+
+	* src/packet.c: re-indented and other whitespace edits
+
+2009-03-14  Daniel Stenberg
+
+	* src/misc.c: improved trace logs with time stamps
+
+2009-03-14  Daniel Stenberg
+
+	* example/simple/scp_nonblock.c: fixed to work quite similar to the
+	sftp_nonblock example so that it waits for the socket correctly and
+	measures the transfer speed fine
+
+2009-03-13  Daniel Stenberg
+
+	* NEWS, src/channel.c, src/kex.c, src/libssh2_priv.h, src/misc.c,
+	src/packet.c, src/session.c, src/sftp.c, src/transport.c,
+	src/userauth.c: Cleanups, that do seem to have boosted SFTP
+	download performance up to 300% in some tests:
+
+	  * cut off "_ex" from several internal function names
+
+	  * corrected some log outputs
+
+	  * simplified libssh2_channel_read_ex() and made it much faster in
+	  the process
+
+	  * cut out {{{ and }}} comments that were incorrect anyway
+
+	  * fixed sftp_packet_ask() to return the correct packet by using
+	    memcmp() and not strncmp()
+
+	  * fixed mkdir()'s wait for packet to use the correct request_id - it
+	    semi-worked previously because strncmp() in sftp_packet_ask()
+	    made it match far too easily.
+
+	  * took away the polling functionality from sftp_packet_ask() since
+	    it wasn't used
+
+2009-03-13  Daniel Stenberg
+
+	* example/simple/sftp_nonblock.c: improved non-blocking behavior
+	for some of the initing stuff before the actual data transfer begins
+
+2009-03-13  Daniel Stenberg
+
+	* example/simple/sftp_nonblock.c: wait for socket action
+	accordingly, and do some measurements on the transfer to make this
+	better to use for speed tests
+
+2009-03-07  Daniel Stenberg
+
+	* NEWS, src/channel.c:
+	- (Mar 7 2009) Olivier Hervieu pointed out a flaw in the
+	  libssh2_channel_x11_req_ex() function that made it produce a
+	  crappy random chunk of data. Peter Stuge improved the fix to not
+	  do out-of-boundary writes. I (Daniel Stenberg) replaced the
+	  snprintf() with a plain sprintf() since the size argument wasn't
+	adding anything anyway.
+
+2009-03-06   Guenter Knauf
+
+	* nw/Makefile.netware, nw/test/Makefile.netware,
+	win32/Makefile.win32, win32/test/Makefile.win32: some minor
+	Makefile tweaks.
+
+2009-02-23  Daniel Stenberg
+
+	* NEWS, docs/Makefile.am, docs/libssh2_version.3,
+	include/libssh2.h, src/Makefile.am, src/version.c:
+	- Added libssh2_version()
+
+2009-02-20  Daniel Stenberg
+
+	* NEWS, src/channel.c:
+	- (Feb 20 2009) libssh2_channel_direct_tcpip_ex() bug #1902169
+	  fixed, which caused it to fail when called a second time.
+
+2009-02-17  dottedmag
+
+	* docs/libssh2_base64_decode.3: Fixed dash-as-minus warning in
+	libssh2_base64_decode.3 manpage
+
+2009-02-17  dottedmag
+
+	* docs/libssh2_banner_set.3: Fixed syntax error in
+	libssh2_banner_set.3 manpage
+
+2009-02-16  Simon Josefsson <simon@josefsson.org>
+
+	* src/Makefile.am: Bump ABI revision from 1.0.0 to 1.0.1 due to
+	code changes.
+
+2009-02-16  Simon Josefsson <simon@josefsson.org>
+
+	* include/libssh2.h: Fix typo.
+
+2009-02-16  Simon Josefsson <simon@josefsson.org>
+
+	* NEWS: Add date for v1.0 release.
+
+2009-02-12  Daniel Stenberg
+
+	* NEWS, src/channel.c:
+	- (Feb 12 2009) Romain Bondue extended Markus Moeller fix from Feb
+	  8, based on a previous (uncommitted) patch by Erik Brossler. It
+	  improves libssh2_channel_write_ex in blocking situations when the
+	  socket is set non- blocking.
+
+2009-02-08  Daniel Stenberg
+
+	* NEWS, src/channel.c: Markus Moeller fixed a flaw in
+	libssh2_channel_write_ex() that would occur on EAGAIN situations.
+
+2009-01-01  Daniel Stenberg
+
+	* TODO: I want to remove all those macros from the official API at
+	next soname bump
+
+2009-01-01  Daniel Stenberg
+
+	* src/kex.c, src/scp.c, tests/ssh2.c: fixed compiler warnings, and
+	stripped off "libssh2_" from static functions as that makes shorter
+	function names and then making the code look fine within 80 columns
+	is easier!
+
+2009-01-01  Daniel Stenberg
+
+	* include/libssh2.h, include/libssh2_publickey.h,
+	include/libssh2_sftp.h: made the three public headers use (mostly)
+	lines shorter than 80 columns as HACKING says - it makes them much
+	more readable to my old tired eyes...
+
+2008-12-28  Daniel Stenberg
+
+	* include/libssh2.h: we're actually working on the 1.0.1 version
+	now (or should it be 1.1?)
+
 2008-12-26  Daniel Stenberg
 
 	* Makefile.am, TODO: Added 'TODO' file (again) with some fresh

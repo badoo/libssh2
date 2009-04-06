@@ -1,4 +1,5 @@
 /* Copyright (c) 2004-2007, Sara Golemon <sarag@libssh2.org>
+ * Copyright (c) 2009 by Daniel Stenberg
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms,
@@ -40,21 +41,84 @@
 #include <unistd.h>
 #endif
 
-/* {{{ libssh2_ntohu32
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
+#include <errno.h>
+
+#ifdef WIN32
+static int wsa2errno(void)
+{
+    switch (WSAGetLastError()) {
+    case WSAEWOULDBLOCK:
+        return EAGAIN;
+
+    case WSAENOTSOCK:
+        return EBADF;
+
+    case WSAEINTR:
+        return EINTR;
+
+    default:
+        /* It is most important to ensure errno does not stay at EAGAIN
+         * when a different error occurs so just set errno to a generic
+         * error */
+        return EIO;
+    }
+}
+#endif
+
+#ifndef _libssh2_recv
+/* _libssh2_recv
+ *
+ * Wrapper around standard recv to allow WIN32 systems
+ * to set errno
  */
-unsigned long
-libssh2_ntohu32(const unsigned char *buf)
+ssize_t
+_libssh2_recv(int socket, void *buffer, size_t length, int flags)
+{
+    ssize_t rc = recv(socket, buffer, length, flags);
+#ifdef WIN32
+    if (rc < 0 )
+        errno = wsa2errno();
+#endif
+    return rc;
+}
+#endif /* _libssh2_recv */
+
+#ifndef _libssh2_send
+
+/* _libssh2_send
+ *
+ * Wrapper around standard send to allow WIN32 systems
+ * to set errno
+ */
+ssize_t
+_libssh2_send(int socket, const void *buffer, size_t length, int flags)
+{
+    ssize_t rc = send(socket, buffer, length, flags);
+#ifdef WIN32
+    if (rc < 0 )
+        errno = wsa2errno();
+#endif
+    return rc;
+}
+#endif /* _libssh2_recv */
+
+/* libssh2_ntohu32
+ */
+unsigned int
+_libssh2_ntohu32(const unsigned char *buf)
 {
     return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }
 
-/* }}} */
 
-/* {{{ libssh2_ntohu64
- *
+/* _libssh2_ntohu64
  */
 libssh2_uint64_t
-libssh2_ntohu64(const unsigned char *buf)
+_libssh2_ntohu64(const unsigned char *buf)
 {
     unsigned long msl, lsl;
 
@@ -64,12 +128,10 @@ libssh2_ntohu64(const unsigned char *buf)
     return ((libssh2_uint64_t)msl <<32) | lsl;
 }
 
-/* }}} */
-
-/* {{{ libssh2_htonu32
+/* _libssh2_htonu32
  */
 void
-libssh2_htonu32(unsigned char *buf, unsigned long value)
+_libssh2_htonu32(unsigned char *buf, unsigned int value)
 {
     buf[0] = (value >> 24) & 0xFF;
     buf[1] = (value >> 16) & 0xFF;
@@ -77,42 +139,20 @@ libssh2_htonu32(unsigned char *buf, unsigned long value)
     buf[3] = value & 0xFF;
 }
 
-/* }}} */
-
-/* {{{ libssh2_htonu64
- */
-void
-libssh2_htonu64(unsigned char *buf, libssh2_uint64_t value)
-{
-    unsigned long msl = ((libssh2_uint64_t)value >> 32);
-
-    buf[0] = (msl >> 24) & 0xFF;
-    buf[1] = (msl >> 16) & 0xFF;
-    buf[2] = (msl >> 8) & 0xFF;
-    buf[3] = msl & 0xFF;
-
-    buf[4] = (value >> 24) & 0xFF;
-    buf[5] = (value >> 16) & 0xFF;
-    buf[6] = (value >> 8) & 0xFF;
-    buf[7] = value & 0xFF;
-}
-
-/* }}} */
-
 /* Base64 Conversion */
 
-/* {{{ */
-static const char libssh2_base64_table[] =
-    { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+static const char base64_table[] =
+{
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '\0'
 };
 
-static const char libssh2_base64_pad = '=';
+static const char base64_pad = '=';
 
-static const short libssh2_base64_reverse_table[256] = {
+static const short base64_reverse_table[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63,
@@ -131,10 +171,8 @@ static const short libssh2_base64_reverse_table[256] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 
-/* }}} */
-
-
-/* {{{ libssh2_base64_decode
+/* libssh2_base64_decode
+ *
  * Decode a base64 chunk and store it into a newly alloc'd buffer
  */
 LIBSSH2_API int
@@ -153,7 +191,7 @@ libssh2_base64_decode(LIBSSH2_SESSION * session, char **data,
     }
 
     for(s = (unsigned char *) src; ((char *) s) < (src + src_len); s++) {
-        if ((v = libssh2_base64_reverse_table[*s]) < 0)
+        if ((v = base64_reverse_table[*s]) < 0)
             continue;
         switch (i % 4) {
         case 0:
@@ -174,7 +212,8 @@ libssh2_base64_decode(LIBSSH2_SESSION * session, char **data,
         i++;
     }
     if ((i % 4) == 1) {
-        /* Invalid -- We have a byte which belongs exclusively to a partial octet */
+        /* Invalid -- We have a byte which belongs exclusively to a partial
+           octet */
         LIBSSH2_FREE(session, *data);
         return -1;
     }
@@ -182,8 +221,6 @@ libssh2_base64_decode(LIBSSH2_SESSION * session, char **data,
     *datalen = len;
     return 0;
 }
-
-/* }}} */
 
 #ifdef LIBSSH2DEBUG
 LIBSSH2_API int
@@ -199,16 +236,18 @@ _libssh2_debug(LIBSSH2_SESSION * session, int context, const char *format, ...)
     char buffer[1536];
     int len;
     va_list vargs;
+    struct timeval now;
+    static int firstsec;
     static const char *const contexts[9] = {
         "Unknown",
         "Transport",
-        "Key Exchange",
+        "Key Ex",
         "Userauth",
-        "Connection",
-        "scp",
-        "SFTP Subsystem",
+        "Conn",
+        "SCP",
+        "SFTP",
         "Failure Event",
-        "Publickey Subsystem",
+        "Publickey",
     };
 
     if (context < 1 || context > 8) {
@@ -218,8 +257,14 @@ _libssh2_debug(LIBSSH2_SESSION * session, int context, const char *format, ...)
         /* no such output asked for */
         return;
     }
+    gettimeofday(&now, NULL);
+    if(!firstsec) {
+        firstsec = now.tv_sec;
+    }
+    now.tv_sec -= firstsec;
 
-    len = snprintf(buffer, 1535, "[libssh2] %s: ", contexts[context]);
+    len = snprintf(buffer, sizeof(buffer), "[libssh2] %d.%06d %s: ",
+                   (int)now.tv_sec, (int)now.tv_usec, contexts[context]);
 
     va_start(vargs, format);
     len += vsnprintf(buffer + len, 1535 - len, format, vargs);
