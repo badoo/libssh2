@@ -219,7 +219,7 @@ libssh2_userauth_sign_with_agent(LIBSSH2_SESSION  *session,
         session->agent_state = libssh2_NB_state_sent2;
     }
 
-    if (session->agent_state = libssh2_NB_state_sent2) {
+    if (session->agent_state == libssh2_NB_state_sent2) {
         read(sock, agbuf, 4);
         _libssh2_debug(session, LIBSSH2_DBG_PUBLICKEY, "%02X %02X %02X %02X",
                        agbuf[0], agbuf[1], agbuf[2], agbuf[3]);
