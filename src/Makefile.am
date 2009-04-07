@@ -2,8 +2,8 @@
 AUTOMAKE_OPTIONS = foreign nostdinc
 
 libssh2_la_SOURCES = channel.c comp.c crypt.c hostkey.c kex.c mac.c	\
-misc.c packet.c publickey.c scp.c session.c sftp.c userauth.c libssh2_priv.h \
-libgcrypt.h transport.c version.c transport.h channel.h comp.h mac.h agent.c
+misc.c packet.c publickey.c scp.c session.c sftp.c userauth.c		\
+libssh2_priv.h openssl.h libgcrypt.h transport.c agent.c
 
 if LIBGCRYPT
 libssh2_la_SOURCES += libgcrypt.c pem.c
@@ -20,7 +20,7 @@ lib_LTLIBRARIES = libssh2.la
 # tree
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/src
 
-VERSION=-version-info 1:1:0
+VERSION=-version-info 1:0:0
 
 # This flag accepts an argument of the form current[:revision[:age]]. So,
 # passing -version-info 3:12:1 sets current to 3, revision to 12, and age to
@@ -51,5 +51,4 @@ VERSION=-version-info 1:1:0
 #
 
 libssh2_la_LDFLAGS = $(VERSION) -no-undefined \
-	-export-symbols-regex '^libssh2_.*' \
 	$(LTLIBGCRYPT) $(LTLIBSSL) $(LTLIBZ)

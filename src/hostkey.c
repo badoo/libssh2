@@ -47,16 +47,14 @@
    * ssh-rsa *
    *********** */
 
-static int hostkey_method_ssh_rsa_dtor(LIBSSH2_SESSION * session,
+static int libssh2_hostkey_method_ssh_rsa_dtor(LIBSSH2_SESSION * session,
                                                void **abstract);
 
-/*
- * hostkey_method_ssh_rsa_init
- *
+/* {{{ libssh2_hostkey_method_ssh_rsa_init
  * Initialize the server hostkey working area with e/n pair
  */
 static int
-hostkey_method_ssh_rsa_init(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_rsa_init(LIBSSH2_SESSION * session,
                                     const unsigned char *hostkey_data,
                                     unsigned long hostkey_data_len,
                                     void **abstract)
@@ -68,12 +66,12 @@ hostkey_method_ssh_rsa_init(LIBSSH2_SESSION * session,
     (void) hostkey_data_len;
 
     if (*abstract) {
-        hostkey_method_ssh_rsa_dtor(session, abstract);
+        libssh2_hostkey_method_ssh_rsa_dtor(session, abstract);
         *abstract = NULL;
     }
 
     s = hostkey_data;
-    len = _libssh2_ntohu32(s);
+    len = libssh2_ntohu32(s);
     s += 4;
 
     if (len != 7 || strncmp((char *) s, "ssh-rsa", 7) != 0) {
@@ -81,12 +79,12 @@ hostkey_method_ssh_rsa_init(LIBSSH2_SESSION * session,
     }
     s += 7;
 
-    e_len = _libssh2_ntohu32(s);
+    e_len = libssh2_ntohu32(s);
     s += 4;
 
     e = s;
     s += e_len;
-    n_len = _libssh2_ntohu32(s);
+    n_len = libssh2_ntohu32(s);
     s += 4;
     n = s;
     s += n_len;
@@ -100,13 +98,13 @@ hostkey_method_ssh_rsa_init(LIBSSH2_SESSION * session,
     return 0;
 }
 
-/*
- * hostkey_method_ssh_rsa_initPEM
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_rsa_initPEM
  * Load a Private Key from a PEM file
  */
 static int
-hostkey_method_ssh_rsa_initPEM(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_rsa_initPEM(LIBSSH2_SESSION * session,
                                        const char *privkeyfile,
                                        unsigned const char *passphrase,
                                        void **abstract)
@@ -116,7 +114,7 @@ hostkey_method_ssh_rsa_initPEM(LIBSSH2_SESSION * session,
     int ret;
 
     if (*abstract) {
-        hostkey_method_ssh_rsa_dtor(session, abstract);
+        libssh2_hostkey_method_ssh_rsa_dtor(session, abstract);
         *abstract = NULL;
     }
 
@@ -136,13 +134,13 @@ hostkey_method_ssh_rsa_initPEM(LIBSSH2_SESSION * session,
     return 0;
 }
 
-/*
- * hostkey_method_ssh_rsa_sign
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_rsa_sign
  * Verify signature created by remote
  */
 static int
-hostkey_method_ssh_rsa_sig_verify(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_rsa_sig_verify(LIBSSH2_SESSION * session,
                                           const unsigned char *sig,
                                           unsigned long sig_len,
                                           const unsigned char *m,
@@ -157,13 +155,13 @@ hostkey_method_ssh_rsa_sig_verify(LIBSSH2_SESSION * session,
     return _libssh2_rsa_sha1_verify(rsactx, sig, sig_len, m, m_len);
 }
 
-/*
- * hostkey_method_ssh_rsa_signv
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_rsa_signv
  * Construct a signature from an array of vectors
  */
 static int
-hostkey_method_ssh_rsa_signv(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_rsa_signv(LIBSSH2_SESSION * session,
                                      unsigned char **signature,
                                      unsigned long *signature_len,
                                      unsigned long veccount,
@@ -191,13 +189,13 @@ hostkey_method_ssh_rsa_signv(LIBSSH2_SESSION * session,
     return 0;
 }
 
-/*
- * hostkey_method_ssh_rsa_dtor
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_rsa_dtor
  * Shutdown the hostkey
  */
 static int
-hostkey_method_ssh_rsa_dtor(LIBSSH2_SESSION * session, void **abstract)
+libssh2_hostkey_method_ssh_rsa_dtor(LIBSSH2_SESSION * session, void **abstract)
 {
     libssh2_rsa_ctx *rsactx = (libssh2_rsa_ctx *) (*abstract);
     (void) session;
@@ -209,15 +207,17 @@ hostkey_method_ssh_rsa_dtor(LIBSSH2_SESSION * session, void **abstract)
     return 0;
 }
 
-static const LIBSSH2_HOSTKEY_METHOD hostkey_method_ssh_rsa = {
+/* }}} */
+
+static const LIBSSH2_HOSTKEY_METHOD libssh2_hostkey_method_ssh_rsa = {
     "ssh-rsa",
     MD5_DIGEST_LENGTH,
-    hostkey_method_ssh_rsa_init,
-    hostkey_method_ssh_rsa_initPEM,
-    hostkey_method_ssh_rsa_sig_verify,
-    hostkey_method_ssh_rsa_signv,
+    libssh2_hostkey_method_ssh_rsa_init,
+    libssh2_hostkey_method_ssh_rsa_initPEM,
+    libssh2_hostkey_method_ssh_rsa_sig_verify,
+    libssh2_hostkey_method_ssh_rsa_signv,
     NULL,                       /* encrypt */
-    hostkey_method_ssh_rsa_dtor,
+    libssh2_hostkey_method_ssh_rsa_dtor,
 };
 #endif /* LIBSSH2_RSA */
 
@@ -226,16 +226,14 @@ static const LIBSSH2_HOSTKEY_METHOD hostkey_method_ssh_rsa = {
    * ssh-dss *
    *********** */
 
-static int hostkey_method_ssh_dss_dtor(LIBSSH2_SESSION * session,
+static int libssh2_hostkey_method_ssh_dss_dtor(LIBSSH2_SESSION * session,
                                                void **abstract);
 
-/*
- * hostkey_method_ssh_dss_init
- *
+/* {{{ libssh2_hostkey_method_ssh_dss_init
  * Initialize the server hostkey working area with p/q/g/y set
  */
 static int
-hostkey_method_ssh_dss_init(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_dss_init(LIBSSH2_SESSION * session,
                                     const unsigned char *hostkey_data,
                                     unsigned long hostkey_data_len,
                                     void **abstract)
@@ -246,31 +244,31 @@ hostkey_method_ssh_dss_init(LIBSSH2_SESSION * session,
     (void) hostkey_data_len;
 
     if (*abstract) {
-        hostkey_method_ssh_dss_dtor(session, abstract);
+        libssh2_hostkey_method_ssh_dss_dtor(session, abstract);
         *abstract = NULL;
     }
 
     s = hostkey_data;
-    len = _libssh2_ntohu32(s);
+    len = libssh2_ntohu32(s);
     s += 4;
     if (len != 7 || strncmp((char *) s, "ssh-dss", 7) != 0) {
         return -1;
     }
     s += 7;
 
-    p_len = _libssh2_ntohu32(s);
+    p_len = libssh2_ntohu32(s);
     s += 4;
     p = s;
     s += p_len;
-    q_len = _libssh2_ntohu32(s);
+    q_len = libssh2_ntohu32(s);
     s += 4;
     q = s;
     s += q_len;
-    g_len = _libssh2_ntohu32(s);
+    g_len = libssh2_ntohu32(s);
     s += 4;
     g = s;
     s += g_len;
-    y_len = _libssh2_ntohu32(s);
+    y_len = libssh2_ntohu32(s);
     s += 4;
     y = s;
     s += y_len;
@@ -282,13 +280,13 @@ hostkey_method_ssh_dss_init(LIBSSH2_SESSION * session,
     return 0;
 }
 
-/*
- * hostkey_method_ssh_dss_initPEM
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_dss_initPEM
  * Load a Private Key from a PEM file
  */
 static int
-hostkey_method_ssh_dss_initPEM(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_dss_initPEM(LIBSSH2_SESSION * session,
                                        const char *privkeyfile,
                                        unsigned const char *passphrase,
                                        void **abstract)
@@ -298,7 +296,7 @@ hostkey_method_ssh_dss_initPEM(LIBSSH2_SESSION * session,
     int ret;
 
     if (*abstract) {
-        hostkey_method_ssh_dss_dtor(session, abstract);
+        libssh2_hostkey_method_ssh_dss_dtor(session, abstract);
         *abstract = NULL;
     }
 
@@ -318,13 +316,13 @@ hostkey_method_ssh_dss_initPEM(LIBSSH2_SESSION * session,
     return 0;
 }
 
-/*
- * libssh2_hostkey_method_ssh_dss_sign
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_dss_sign
  * Verify signature created by remote
  */
 static int
-hostkey_method_ssh_dss_sig_verify(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_dss_sig_verify(LIBSSH2_SESSION * session,
                                           const unsigned char *sig,
                                           unsigned long sig_len,
                                           const unsigned char *m,
@@ -343,13 +341,13 @@ hostkey_method_ssh_dss_sig_verify(LIBSSH2_SESSION * session,
     return _libssh2_dsa_sha1_verify(dsactx, sig, m, m_len);
 }
 
-/*
- * hostkey_method_ssh_dss_signv
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_dss_signv
  * Construct a signature from an array of vectors
  */
 static int
-hostkey_method_ssh_dss_signv(LIBSSH2_SESSION * session,
+libssh2_hostkey_method_ssh_dss_signv(LIBSSH2_SESSION * session,
                                      unsigned char **signature,
                                      unsigned long *signature_len,
                                      unsigned long veccount,
@@ -383,13 +381,13 @@ hostkey_method_ssh_dss_signv(LIBSSH2_SESSION * session,
     return 0;
 }
 
-/*
- * libssh2_hostkey_method_ssh_dss_dtor
- *
+/* }}} */
+
+/* {{{ libssh2_hostkey_method_ssh_dss_dtor
  * Shutdown the hostkey method
  */
 static int
-hostkey_method_ssh_dss_dtor(LIBSSH2_SESSION * session, void **abstract)
+libssh2_hostkey_method_ssh_dss_dtor(LIBSSH2_SESSION * session, void **abstract)
 {
     libssh2_dsa_ctx *dsactx = (libssh2_dsa_ctx *) (*abstract);
     (void) session;
@@ -401,24 +399,26 @@ hostkey_method_ssh_dss_dtor(LIBSSH2_SESSION * session, void **abstract)
     return 0;
 }
 
-static const LIBSSH2_HOSTKEY_METHOD hostkey_method_ssh_dss = {
+/* }}} */
+
+static const LIBSSH2_HOSTKEY_METHOD libssh2_hostkey_method_ssh_dss = {
     "ssh-dss",
     MD5_DIGEST_LENGTH,
-    hostkey_method_ssh_dss_init,
-    hostkey_method_ssh_dss_initPEM,
-    hostkey_method_ssh_dss_sig_verify,
-    hostkey_method_ssh_dss_signv,
+    libssh2_hostkey_method_ssh_dss_init,
+    libssh2_hostkey_method_ssh_dss_initPEM,
+    libssh2_hostkey_method_ssh_dss_sig_verify,
+    libssh2_hostkey_method_ssh_dss_signv,
     NULL,                       /* encrypt */
-    hostkey_method_ssh_dss_dtor,
+    libssh2_hostkey_method_ssh_dss_dtor,
 };
 #endif /* LIBSSH2_DSA */
 
-static const LIBSSH2_HOSTKEY_METHOD *hostkey_methods[] = {
+static const LIBSSH2_HOSTKEY_METHOD *_libssh2_hostkey_methods[] = {
 #if LIBSSH2_RSA
-    &hostkey_method_ssh_rsa,
+    &libssh2_hostkey_method_ssh_rsa,
 #endif /* LIBSSH2_RSA */
 #if LIBSSH2_DSA
-    &hostkey_method_ssh_dss,
+    &libssh2_hostkey_method_ssh_dss,
 #endif /* LIBSSH2_DSA */
     NULL
 };
@@ -426,12 +426,10 @@ static const LIBSSH2_HOSTKEY_METHOD *hostkey_methods[] = {
 const LIBSSH2_HOSTKEY_METHOD **
 libssh2_hostkey_methods(void)
 {
-    return hostkey_methods;
+    return _libssh2_hostkey_methods;
 }
 
-/*
- * libssh2_hostkey_hash
- *
+/* {{{ libssh2_hostkey_hash
  * Returns hash signature
  * Returned buffer should NOT be freed
  * Length of buffer is determined by hash type
@@ -453,3 +451,5 @@ libssh2_hostkey_hash(LIBSSH2_SESSION * session, int hash_type)
         return NULL;
     }
 }
+
+/* }}} */

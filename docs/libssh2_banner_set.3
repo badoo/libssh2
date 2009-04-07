@@ -1,4 +1,4 @@
-.\" $Id: libssh2_banner_set.3,v 1.3 2009/03/17 10:34:27 bagder Exp $
+.\" $Id: libssh2_banner_set.3,v 1.1 2007/06/13 17:03:38 jehousley Exp $
 .\"
 .TH libssh2_banner_set 3 "1 Jun 2007" "libssh2 0.15" "libssh2 manual"
 .SH NAME
@@ -11,14 +11,14 @@ libssh2_banner_set(LIBSSH2_SESSION *session, const char *banner);
 
 .SH DESCRIPTION
 \fIsession\fP - Session instance as returned by 
-.BR libssh2_session_init_ex(3)
+.BR libssh2_session_init(3)
 
 \fIbanner\fP - A pointer to a user defined banner
 
 Set the banner that will be sent to the remote host when the SSH session is 
 started with 
 .BR libssh2_session_startup(3)
-  This is optional; a banner corresponding to the protocol and libssh2 version will be sent by default.
+.  This is optional; a banner corresponding to the protocol and libssh2 version will be sent by default.
 
 .SH RETURN VALUE
 Return 0 on success or negative on failure.  It returns

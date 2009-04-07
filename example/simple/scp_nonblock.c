@@ -1,12 +1,7 @@
 /*
- * $Id: scp_nonblock.c,v 1.15 2009/03/25 22:52:32 bagder Exp $
+ * $Id: scp_nonblock.c,v 1.13 2008/11/10 16:48:41 bagder Exp $
  *
  * Sample showing how to do SCP transfers in a non-blocking manner.
- *
- * The sample code has default values for host name, user name, password
- * and path to copy, but you can specify them on the command line like:
- *
- * "scp_nonblock 192.168.0.1 user password /tmp/secrets"
  */
 
 #include "libssh2_config.h"
@@ -37,43 +32,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-/* diff in ms */
-static long tvdiff(struct timeval newer, struct timeval older)
-{
-  return (newer.tv_sec-older.tv_sec)*1000+
-      (newer.tv_usec-older.tv_usec)/1000;
-}
-
-static int waitsocket(int socket_fd, LIBSSH2_SESSION *session)
-{
-    struct timeval timeout;
-    int rc;
-    fd_set fd;
-    fd_set *writefd = NULL;
-    fd_set *readfd = NULL;
-    int dir;
-
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-
-    FD_ZERO(&fd);
-
-    FD_SET(socket_fd, &fd);
-
-    /* now make sure we wait in the correct direction */
-    dir = libssh2_session_block_directions(session);
-
-    if(dir & LIBSSH2_SESSION_BLOCK_INBOUND)
-        readfd = &fd;
-
-    if(dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
-        writefd = &fd;
-
-    rc = select(socket_fd + 1, readfd, writefd, NULL, &timeout);
-
-    return rc;
-}
-
 int main(int argc, char *argv[])
 {
     unsigned long hostaddr;
@@ -86,12 +44,7 @@ int main(int argc, char *argv[])
     const char *password="password";
     const char *scppath="/tmp/TEST";
     struct stat fileinfo;
-    struct timeval start;
-    struct timeval end;
     int rc;
-    int total = 0;
-    long time_ms;
-    int spin = 0;
 #if defined(HAVE_IOCTLSOCKET)
     long flag = 1;
 #endif
@@ -157,13 +110,10 @@ int main(int argc, char *argv[])
     /* Since we have set non-blocking, tell libssh2 we are non-blocking */
     libssh2_session_set_blocking(session, 0);
 
-    gettimeofday(&start, NULL);
-
     /* ... start it up. This will trade welcome banners, exchange keys,
      * and setup crypto, compression, and MAC layers
      */
-    while ((rc = libssh2_session_startup(session, sock)) ==
-           LIBSSH2_ERROR_EAGAIN);
+    while ((rc = libssh2_session_startup(session, sock)) == LIBSSH2_ERROR_EAGAIN);
     if (rc) {
         fprintf(stderr, "Failure establishing SSH session: %d\n", rc);
         return -1;
@@ -183,8 +133,7 @@ int main(int argc, char *argv[])
 
     if (auth_pw) {
         /* We could authenticate via password */
-        while ((rc = libssh2_userauth_password(session, username, password)) ==
-               LIBSSH2_ERROR_EAGAIN);
+        while ((rc = libssh2_userauth_password(session, username, password)) == LIBSSH2_ERROR_EAGAIN);
     if (rc) {
             fprintf(stderr, "Authentication by password failed.\n");
             goto shutdown;
@@ -192,46 +141,36 @@ int main(int argc, char *argv[])
     } else {
         /* Or by public key */
         while ((rc = libssh2_userauth_publickey_fromfile(session, username,
-                                                         "/home/username/"
-                                                         ".ssh/id_rsa.pub",
-                                                         "/home/username/"
-                                                         ".ssh/id_rsa",
-                                                         password)) ==
-               LIBSSH2_ERROR_EAGAIN);
+                                                         "/home/username/.ssh/id_rsa.pub",
+                                                         "/home/username/.ssh/id_rsa",
+                                                         password)) == LIBSSH2_ERROR_EAGAIN);
     if (rc) {
             fprintf(stderr, "\tAuthentication by public key failed\n");
             goto shutdown;
         }
     }
 
-#if 0
-    libssh2_trace(session, LIBSSH2_TRACE_CONN);
-#endif
-
     /* Request a file via SCP */
     fprintf(stderr, "libssh2_scp_recv()!\n");
     do {
         channel = libssh2_scp_recv(session, scppath, &fileinfo);
 
-        if (!channel) {
-            if(libssh2_session_last_errno(session) != LIBSSH2_ERROR_EAGAIN) {
+        if ((!channel) && (libssh2_session_last_errno(session) != LIBSSH2_ERROR_EAGAIN)) {
             char *err_msg;
 
             libssh2_session_last_error(session, &err_msg, NULL, 0);
             fprintf(stderr, "%s\n", err_msg);
             goto shutdown;
         }
-            else {
-                fprintf(stderr, "libssh2_scp_recv() spin\n");
-                waitsocket(sock, session);
-            }
-        }
     } while (!channel);
     fprintf(stderr, "libssh2_scp_recv() is done, now receive data!\n");
 
     while(got < fileinfo.st_size) {
-        char mem[1024*24];
+        char mem[1000];
+
+        struct timeval timeout;
         int rc;
+        fd_set fd;
 
         do {
             int amount=sizeof(mem);
@@ -245,34 +184,37 @@ int main(int argc, char *argv[])
             if (rc > 0) {
                 write(1, mem, rc);
                 got += rc;
-                total += rc;
             }
         } while (rc > 0);
 
-        if ((rc == LIBSSH2_ERROR_EAGAIN) && (got < fileinfo.st_size)) {
+        if (rc == LIBSSH2_ERROR_EAGAIN) {
             /* this is due to blocking that would occur otherwise
             so we loop on this condition */
 
-            spin++;
-            waitsocket(sock, session); /* now we wait */
+            timeout.tv_sec = 10;
+            timeout.tv_usec = 0;
+
+            FD_ZERO(&fd);
+
+            FD_SET(sock, &fd);
+
+            rc = select(sock+1, &fd, &fd, NULL, &timeout);
+            if (rc <= 0) {
+                /* negative is error
+                0 is timeout */
+                fprintf(stderr, "SCP timed out: %d\n", rc);
+            }
             continue;
         }
         break;
     }
-
-    gettimeofday(&end, NULL);
-
-    time_ms = tvdiff(end, start);
-    printf("Got %d bytes in %ld ms = %.1f bytes/sec spin: %d\n", total,
-           time_ms, total/(time_ms/1000.0), spin );
 
     libssh2_channel_free(channel);
     channel = NULL;
 
 shutdown:
 
-    libssh2_session_disconnect(session,
-                               "Normal Shutdown, Thank you for playing");
+    libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing");
     libssh2_session_free(session);
 
 #ifdef WIN32

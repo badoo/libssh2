@@ -1,5 +1,4 @@
-/* Copyright (c) 2004-2007 Sara Golemon <sarag@libssh2.org>
- * Copyright (c) 2009 by Daniel Stenberg
+/* Copyright (c) 2004-2007, Sara Golemon <sarag@libssh2.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms,
@@ -51,9 +50,7 @@
 #include <alloca.h>
 #endif
 
-#include "transport.h"
-
-/* libssh2_default_alloc
+/* {{{ libssh2_default_alloc
  */
 static
 LIBSSH2_ALLOC_FUNC(libssh2_default_alloc)
@@ -62,7 +59,9 @@ LIBSSH2_ALLOC_FUNC(libssh2_default_alloc)
     return malloc(count);
 }
 
-/* libssh2_default_free
+/* }}} */
+
+/* {{{ libssh2_default_free
  */
 static
 LIBSSH2_FREE_FUNC(libssh2_default_free)
@@ -71,7 +70,9 @@ LIBSSH2_FREE_FUNC(libssh2_default_free)
     free(ptr);
 }
 
-/* libssh2_default_realloc
+/* }}} */
+
+/* {{{ libssh2_default_realloc
  */
 static
 LIBSSH2_REALLOC_FUNC(libssh2_default_realloc)
@@ -80,15 +81,15 @@ LIBSSH2_REALLOC_FUNC(libssh2_default_realloc)
     return realloc(ptr, count);
 }
 
-/*
- * banner_receive
- *
+/* }}} */
+
+/* {{{ libssh2_banner_receive
  * Wait for a hello from the remote host
  * Allocate a buffer and store the banner in session->remote.banner
  * Returns: 0 on success, PACKET_EAGAIN if read would block, 1 on failure
  */
 static int
-banner_receive(LIBSSH2_SESSION * session)
+libssh2_banner_receive(LIBSSH2_SESSION * session)
 {
     int ret;
     int banner_len;
@@ -106,11 +107,32 @@ banner_receive(LIBSSH2_SESSION * session)
             || (session->banner_TxRx_banner[banner_len - 1] != '\n'))) {
         char c = '\0';
 
-		ret = _libssh2_recv(session->socket_fd, &c, 1,
+        ret =
+            recv(session->socket_fd, &c, 1,
                  LIBSSH2_SOCKET_RECV_FLAGS(session));
         session->lastIO_state = LIBSSH2_LAST_IO_RECV;
 
         if (ret < 0) {
+#ifdef WIN32
+            switch (WSAGetLastError()) {
+            case WSAEWOULDBLOCK:
+                errno = EAGAIN;
+                break;
+
+            case WSAENOTSOCK:
+                errno = EBADF;
+                break;
+
+            case WSAENOTCONN:
+            case WSAECONNABORTED:
+                errno = WSAENOTCONN;
+                break;
+
+            case WSAEINTR:
+                errno = EINTR;
+                break;
+            }
+#endif /* WIN32 */
             if (errno == EAGAIN) {
                 session->socket_block_directions =
                     LIBSSH2_SESSION_BLOCK_INBOUND;
@@ -165,9 +187,9 @@ banner_receive(LIBSSH2_SESSION * session)
     return 0;
 }
 
-/*
- * banner_send
- *
+/* }}} */
+
+/* {{{ libssh2_banner_send
  * Send the default banner, or the one set via libssh2_setopt_string
  *
  * Returns PACKET_EAGAIN if it would block - and if it does so, you should
@@ -176,7 +198,7 @@ banner_receive(LIBSSH2_SESSION * session)
  * (same data pointer and same data_len) until zero or failure is returned.
  */
 static int
-banner_send(LIBSSH2_SESSION * session)
+libssh2_banner_send(LIBSSH2_SESSION * session)
 {
     char *banner = (char *) LIBSSH2_SSH_DEFAULT_BANNER_WITH_CRLF;
     int banner_len = sizeof(LIBSSH2_SSH_DEFAULT_BANNER_WITH_CRLF) - 1;
@@ -208,8 +230,8 @@ banner_send(LIBSSH2_SESSION * session)
         session->banner_TxRx_state = libssh2_NB_state_created;
     }
 
-    ret = _libssh2_send(session->socket_fd,
-                        banner + session->banner_TxRx_total_send,
+    ret =
+        send(session->socket_fd, banner + session->banner_TxRx_total_send,
              banner_len - session->banner_TxRx_total_send,
              LIBSSH2_SOCKET_SEND_FLAGS(session));
     session->lastIO_state = LIBSSH2_LAST_IO_SEND;
@@ -234,13 +256,15 @@ banner_send(LIBSSH2_SESSION * session)
     return 0;
 }
 
+/* }}} */
+
 /*
- * session_nonblock() sets the given socket to either blocking or
+ * _libssh2_nonblock() sets the given socket to either blocking or
  * non-blocking mode based on the 'nonblock' boolean argument. This function
  * is copied from the libcurl sources with permission.
  */
 static int
-session_nonblock(int sockfd,   /* operate on this */
+_libssh2_nonblock(int sockfd,   /* operate on this */
                   int nonblock /* TRUE or FALSE */ )
 {
 #undef SETBLOCK
@@ -305,12 +329,11 @@ session_nonblock(int sockfd,   /* operate on this */
 }
 
 /*
- * get_socket_nonblocking()
- *
- * gets the given blocking or non-blocking state of the socket.
+ * _libssh2_get_socket_nonblocking() gets the given blocking or non-blocking
+ * state of the socket.
  */
 static int
-get_socket_nonblocking(int sockfd)
+_libssh2_get_socket_nonblocking(int sockfd)
 {                               /* operate on this */
 #undef GETBLOCK
 #define GETBLOCK 0
@@ -365,7 +388,7 @@ get_socket_nonblocking(int sockfd)
 #endif
 }
 
-/* libssh2_banner_set
+/* {{{ libssh2_banner_set
  * Set the local banner
  */
 LIBSSH2_API int
@@ -400,14 +423,13 @@ libssh2_banner_set(LIBSSH2_SESSION * session, const char *banner)
     return 0;
 }
 
-/*
- * libssh2_session_init_ex
- *
- * Allocate and initialize a libssh2 session structure. Allows for malloc
- * callbacks in case the calling program has its own memory manager It's
- * allowable (but unadvisable) to define some but not all of the malloc
- * callbacks An additional pointer value may be optionally passed to be sent
- * to the callbacks (so they know who's asking)
+/* }}} */
+
+/* {{{ proto libssh2_session_init
+ * Allocate and initialize a libssh2 session structure
+ * Allows for malloc callbacks in case the calling program has its own memory manager
+ * It's allowable (but unadvisable) to define some but not all of the malloc callbacks
+ * An additional pointer value may be optionally passed to be sent to the callbacks (so they know who's asking)
  */
 LIBSSH2_API LIBSSH2_SESSION *
 libssh2_session_init_ex(LIBSSH2_ALLOC_FUNC((*my_alloc)),
@@ -436,7 +458,6 @@ libssh2_session_init_ex(LIBSSH2_ALLOC_FUNC((*my_alloc)),
         session->free = local_free;
         session->realloc = local_realloc;
         session->abstract = abstract;
-        session->api_block_mode = 1; /* blocking API by default */
         _libssh2_debug(session, LIBSSH2_DBG_TRANS,
                        "New session resource allocated");
         libssh2_crypto_init();
@@ -444,9 +465,9 @@ libssh2_session_init_ex(LIBSSH2_ALLOC_FUNC((*my_alloc)),
     return session;
 }
 
-/*
- * libssh2_session_callback_set
- *
+/* }}} */
+
+/* {{{ libssh2_session_callback_set
  * Set (or reset) a callback function
  * Returns the prior address
  *
@@ -491,47 +512,17 @@ libssh2_session_callback_set(LIBSSH2_SESSION * session,
     return NULL;
 }
 
-/*
- * _libssh2_wait_socket()
- *
- * Utility function that waits for action on the socket. Returns 0 when ready
- * to run again or error on timeout.
+/* }}} */
+
+/* {{{ proto libssh2_session_startup
+ * session: LIBSSH2_SESSION struct allocated and owned by the calling program
+ * Returns: 0 on success, or non-zero on failure
+ * Any memory allocated by libssh2 will use alloc/realloc/free
+ * callbacks in session
+ * socket *must* be populated with an opened and connected socket.
  */
-int _libssh2_wait_socket(LIBSSH2_SESSION *session)
-{
-    fd_set fd;
-    fd_set *writefd = NULL;
-    fd_set *readfd = NULL;
-    int dir;
-    int rc;
-
-    FD_ZERO(&fd);
-    FD_SET(session->socket_fd, &fd);
-
-    /* now make sure we wait in the correct direction */
-    dir = libssh2_session_block_directions(session);
-
-    if(dir & LIBSSH2_SESSION_BLOCK_INBOUND)
-        readfd = &fd;
-
-    if(dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
-        writefd = &fd;
-
-    /* Note that this COULD be made to use a timeout that perhaps could be
-       customizable by the app or something... */
-    rc = select(session->socket_fd + 1, readfd, writefd, NULL, NULL);
-
-    if(rc <= 0) {
-        /* timeout (or error), bail out with a timeout error */
-        session->err_code = LIBSSH2_ERROR_TIMEOUT;
-        return LIBSSH2_ERROR_TIMEOUT;
-    }
-
-    return 0; /* ready to try again */
-}
-
-static int
-session_startup(LIBSSH2_SESSION *session, int sock)
+LIBSSH2_API int
+libssh2_session_startup(LIBSSH2_SESSION * session, int sock)
 {
     int rc;
 
@@ -547,12 +538,15 @@ session_startup(LIBSSH2_SESSION *session, int sock)
         }
         session->socket_fd = sock;
 
-        session->socket_prev_blockstate =
-            !get_socket_nonblocking(session->socket_fd);
-
-        if (session->socket_prev_blockstate) {
-            /* If in blocking state chang to non-blocking */
-            session_nonblock(session->socket_fd, 1);
+        session->socket_block =
+            !_libssh2_get_socket_nonblocking(session->socket_fd);
+        if (session->socket_block) {
+            /*
+             * Since we can't be sure that we are in blocking or there
+             * was an error detecting the state, so set to blocking to
+             * be sure
+             */
+            _libssh2_nonblock(session->socket_fd, 0);
         }
 
         session->startup_state = libssh2_NB_state_created;
@@ -561,7 +555,7 @@ session_startup(LIBSSH2_SESSION *session, int sock)
     /* TODO: Liveness check */
 
     if (session->startup_state == libssh2_NB_state_created) {
-        rc = banner_send(session);
+        rc = libssh2_banner_send(session);
         if (rc == PACKET_EAGAIN) {
             libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                           "Would block sending banner to remote host", 0);
@@ -577,7 +571,7 @@ session_startup(LIBSSH2_SESSION *session, int sock)
     }
 
     if (session->startup_state == libssh2_NB_state_sent) {
-        rc = banner_receive(session);
+        rc = libssh2_banner_receive(session);
         if (rc == PACKET_EAGAIN) {
             libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                           "Would block waiting for banner", 0);
@@ -613,7 +607,7 @@ session_startup(LIBSSH2_SESSION *session, int sock)
 
         /* Request the userauth service */
         session->startup_service[0] = SSH_MSG_SERVICE_REQUEST;
-        _libssh2_htonu32(session->startup_service + 1,
+        libssh2_htonu32(session->startup_service + 1,
                         sizeof("ssh-userauth") - 1);
         memcpy(session->startup_service + 5, "ssh-userauth",
                sizeof("ssh-userauth") - 1);
@@ -622,14 +616,13 @@ session_startup(LIBSSH2_SESSION *session, int sock)
     }
 
     if (session->startup_state == libssh2_NB_state_sent3) {
-        rc = _libssh2_transport_write(session, session->startup_service,
+        rc = libssh2_packet_write(session, session->startup_service,
                                   sizeof("ssh-userauth") + 5 - 1);
         if (rc == PACKET_EAGAIN) {
             libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                           "Would block asking for ssh-userauth service", 0);
             return LIBSSH2_ERROR_EAGAIN;
-        }
-        else if (rc) {
+        } else if (rc) {
             libssh2_error(session, LIBSSH2_ERROR_SOCKET_SEND,
                           "Unable to ask for ssh-userauth service", 0);
             return LIBSSH2_ERROR_SOCKET_SEND;
@@ -639,7 +632,7 @@ session_startup(LIBSSH2_SESSION *session, int sock)
     }
 
     if (session->startup_state == libssh2_NB_state_sent4) {
-        rc = _libssh2_packet_require(session, SSH_MSG_SERVICE_ACCEPT,
+        rc = libssh2_packet_require_ex(session, SSH_MSG_SERVICE_ACCEPT,
                                        &session->startup_data,
                                        &session->startup_data_len, 0, NULL, 0,
                                        &session->startup_req_state);
@@ -649,7 +642,7 @@ session_startup(LIBSSH2_SESSION *session, int sock)
             return LIBSSH2_ERROR_SOCKET_DISCONNECT;
         }
         session->startup_service_length =
-            _libssh2_ntohu32(session->startup_data + 1);
+            libssh2_ntohu32(session->startup_data + 1);
 
         if ((session->startup_service_length != (sizeof("ssh-userauth") - 1))
             || strncmp("ssh-userauth", (char *) session->startup_data + 5,
@@ -672,33 +665,14 @@ session_startup(LIBSSH2_SESSION *session, int sock)
     return LIBSSH2_ERROR_INVAL;
 }
 
-/*
- * proto libssh2_session_startup
- *
- * session: LIBSSH2_SESSION struct allocated and owned by the calling program
- * Returns: 0 on success, or non-zero on failure
- * Any memory allocated by libssh2 will use alloc/realloc/free
- * callbacks in session.
- * The 'sock' socket *must* be populated with an opened and connected socket.
- */
-LIBSSH2_API int
-libssh2_session_startup(LIBSSH2_SESSION *session, int sock)
-{
-    int rc;
+/* }}} */
 
-    BLOCK_ADJUST(rc, session, session_startup(session, sock) );
-
-    return rc;
-}
-
-/*
- * libssh2_session_free
- *
+/* {{{ proto libssh2_session_free
  * Frees the memory allocated to the session
  * Also closes and frees any channels attached to this session
  */
-static int
-session_free(LIBSSH2_SESSION *session)
+LIBSSH2_API int
+libssh2_session_free(LIBSSH2_SESSION * session)
 {
     int rc;
 
@@ -727,8 +701,7 @@ session_free(LIBSSH2_SESSION *session)
                 /* free */
                 LIBSSH2_FREE(session, tmp);
 
-                /* reverse linking isn't important here, we're killing the
-                 * structure */
+                /* reverse linking isn't important here, we're killing the structure */
             }
         }
 
@@ -922,36 +895,17 @@ session_free(LIBSSH2_SESSION *session)
         LIBSSH2_FREE(session, tmp);
     }
 
-    if(session->socket_prev_blockstate)
-        /* if the socket was previously blocking, put it back so */
-        session_nonblock(session->socket_fd, 0);
-
     LIBSSH2_FREE(session, session);
 
     return 0;
 }
 
-/*
- * libssh2_session_free
- *
- * Frees the memory allocated to the session
- * Also closes and frees any channels attached to this session
+/* }}} */
+
+/* {{{ libssh2_session_disconnect_ex
  */
 LIBSSH2_API int
-libssh2_session_free(LIBSSH2_SESSION * session)
-{
-    int rc;
-
-    BLOCK_ADJUST(rc, session, session_free(session) );
-
-    return rc;
-}
-
-/*
- * libssh2_session_disconnect_ex
- */
-static int
-session_disconnect(LIBSSH2_SESSION *session, int reason,
+libssh2_session_disconnect_ex(LIBSSH2_SESSION * session, int reason,
                               const char *description, const char *lang)
 {
     unsigned char *s;
@@ -982,17 +936,17 @@ session_disconnect(LIBSSH2_SESSION *session, int reason,
         }
 
         *(s++) = SSH_MSG_DISCONNECT;
-        _libssh2_htonu32(s, reason);
+        libssh2_htonu32(s, reason);
         s += 4;
 
-        _libssh2_htonu32(s, descr_len);
+        libssh2_htonu32(s, descr_len);
         s += 4;
         if (description) {
             memcpy(s, description, descr_len);
             s += descr_len;
         }
 
-        _libssh2_htonu32(s, lang_len);
+        libssh2_htonu32(s, lang_len);
         s += 4;
         if (lang) {
             memcpy(s, lang, lang_len);
@@ -1002,7 +956,7 @@ session_disconnect(LIBSSH2_SESSION *session, int reason,
         session->disconnect_state = libssh2_NB_state_created;
     }
 
-    rc = _libssh2_transport_write(session, session->disconnect_data,
+    rc = libssh2_packet_write(session, session->disconnect_data,
                               session->disconnect_data_len);
     if (rc == PACKET_EAGAIN) {
         return PACKET_EAGAIN;
@@ -1015,27 +969,12 @@ session_disconnect(LIBSSH2_SESSION *session, int reason,
     return 0;
 }
 
-/*
- * libssh2_session_disconnect_ex
- */
-LIBSSH2_API int
-libssh2_session_disconnect_ex(LIBSSH2_SESSION *session, int reason,
-                              const char *desc, const char *lang)
-{
-    int rc;
+/* }}} */
 
-    BLOCK_ADJUST(rc, session,
-                 session_disconnect(session, reason, desc, lang));
-
-    return rc;
-}
-
-/* libssh2_session_methods
- *
+/* {{{ libssh2_session_methods
  * Return the currently active methods for method_type
- *
- * NOTE: Currently lang_cs and lang_sc are ALWAYS set to empty string
- * regardless of actual negotiation Strings should NOT be freed
+ * NOTE: Currently lang_cs and lang_sc are ALWAYS set to empty string regardless of actual negotiation
+ * Strings should NOT be freed
  */
 LIBSSH2_API const char *
 libssh2_session_methods(LIBSSH2_SESSION * session, int method_type)
@@ -1100,7 +1039,9 @@ libssh2_session_methods(LIBSSH2_SESSION * session, int method_type)
     return method->name;
 }
 
-/* libssh2_session_abstract
+/* }}} */
+
+/* {{{ libssh2_session_abstract
  * Retrieve a pointer to the abstract property
  */
 LIBSSH2_API void **
@@ -1109,11 +1050,12 @@ libssh2_session_abstract(LIBSSH2_SESSION * session)
     return &session->abstract;
 }
 
-/* libssh2_session_last_error
- *
- * Returns error code and populates an error string into errmsg If want_buf is
- * non-zero then the string placed into errmsg must be freed by the calling
- * program. Otherwise it is assumed to be owned by libssh2
+/* }}} */
+
+/* {{{ libssh2_session_last_error
+ * Returns error code and populates an error string into errmsg
+ * If want_buf is non-zero then the string placed into errmsg must be freed by the calling program
+ * Otherwise it is assumed to be owned by libssh2
  */
 LIBSSH2_API int
 libssh2_session_last_error(LIBSSH2_SESSION * session, char **errmsg,
@@ -1166,7 +1108,9 @@ libssh2_session_last_error(LIBSSH2_SESSION * session, char **errmsg,
     return session->err_code;
 }
 
-/* libssh2_session_last_error
+/* }}} */
+
+/* {{{ libssh2_session_last_error
 * Returns error code
 */
 LIBSSH2_API int
@@ -1186,7 +1130,9 @@ libssh2_session_last_io(LIBSSH2_SESSION * session)
     return session->lastIO_state;
 }
 
-/* libssh2_session_flag
+/* }}} */
+
+/* {{{ libssh2_session_flag
  * Set/Get session flags
  * Passing flag==0 will avoid changing session->flags while still returning its current value
  */
@@ -1202,25 +1148,32 @@ libssh2_session_flag(LIBSSH2_SESSION * session, int flag, int value)
     return session->flags;
 }
 
-/* _libssh2_session_set_blocking
- *
- * Set a session's blocking mode on or off, return the previous status when
- * this function is called. Note this function does not alter the state of the
- * actual socket involved.
+/* }}} */
+
+/* {{{ _libssh2_session_set_blocking
+ * Set a session's blocking mode on or off, return the previous status
+ * when this function is called.
  */
 int
 _libssh2_session_set_blocking(LIBSSH2_SESSION * session, int blocking)
 {
-    int bl = session->api_block_mode;
+    int bl = session->socket_block;
     _libssh2_debug(session, LIBSSH2_DBG_CONN,
-                   "Setting blocking mode %s", blocking?"ON":"OFF");
-    session->api_block_mode = blocking;
+                   "Setting blocking mode on session %d", blocking);
+    if (blocking == session->socket_block) {
+        /* avoid if already correct */
+        return bl;
+    }
+    session->socket_block = blocking;
+
+    _libssh2_nonblock(session->socket_fd, !blocking);
 
     return bl;
 }
 
-/* libssh2_session_set_blocking
- *
+/* }}} */
+
+/* {{{ libssh2_session_set_blocking
  * Set a channel's blocking mode on or off, similar to a socket's
  * fcntl(fd, F_SETFL, O_NONBLOCK); type command
  */
@@ -1230,19 +1183,20 @@ libssh2_session_set_blocking(LIBSSH2_SESSION * session, int blocking)
     (void) _libssh2_session_set_blocking(session, blocking);
 }
 
-/* libssh2_session_get_blocking
- *
+/* }}} */
+
+/* {{{ libssh2_session_get_blocking
 * Returns a session's blocking mode on or off
 */
 LIBSSH2_API int
 libssh2_session_get_blocking(LIBSSH2_SESSION * session)
 {
-    return session->api_block_mode;
+    return session->socket_block;
 }
 
-/*
- * libssh2_poll_channel_read
- *
+/* }}} */
+
+/* {{{ libssh2_poll_channel_read
  * Returns 0 if no data is waiting on channel,
  * non-0 if data is available
  */
@@ -1252,8 +1206,9 @@ libssh2_poll_channel_read(LIBSSH2_CHANNEL * channel, int extended)
     LIBSSH2_SESSION *session = channel->session;
     LIBSSH2_PACKET *packet = session->packets.head;
 
-    while (packet) {
-        if ( channel->local.id == _libssh2_ntohu32(packet->data + 1)) {
+    while (packet) 
+	{
+		if ( channel->local.id == libssh2_ntohu32(packet->data + 1)) {
 			if ( extended == 1 &&
 				(packet->data[0] == SSH_MSG_CHANNEL_EXTENDED_DATA 
 				|| packet->data[0] == SSH_MSG_CHANNEL_DATA )) {
@@ -1270,32 +1225,33 @@ libssh2_poll_channel_read(LIBSSH2_CHANNEL * channel, int extended)
     return 0;
 }
 
-/*
- * poll_channel_write
- *
+/* }}} */
+
+/* {{{ libssh2_poll_channel_write
  * Returns 0 if writing to channel would block,
  * non-0 if data can be written without blocking
  */
 static inline int
-poll_channel_write(LIBSSH2_CHANNEL * channel)
+libssh2_poll_channel_write(LIBSSH2_CHANNEL * channel)
 {
     return channel->local.window_size ? 1 : 0;
 }
 
-/* poll_listener_queued
- *
+/* }}} */
+
+/* {{{ libssh2_poll_listener_queued
  * Returns 0 if no connections are waiting to be accepted
  * non-0 if one or more connections are available
  */
 static inline int
-poll_listener_queued(LIBSSH2_LISTENER * listener)
+libssh2_poll_listener_queued(LIBSSH2_LISTENER * listener)
 {
     return listener->queue ? 1 : 0;
 }
 
-/*
- * libssh2_poll
- *
+/* }}} */
+
+/* {{{ libssh2_poll
  * Poll sockets, channels, and listeners for activity
  */
 LIBSSH2_API int
@@ -1417,30 +1373,25 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
             if (fds[i].events != fds[i].revents) {
                 switch (fds[i].type) {
                 case LIBSSH2_POLLFD_CHANNEL:
-                    if ((fds[i].events & LIBSSH2_POLLFD_POLLIN) &&
-                        /* Want to be ready for read */
-                        ((fds[i].revents & LIBSSH2_POLLFD_POLLIN) == 0)) {
-                        /* Not yet known to be ready for read */
+                    if ((fds[i].events & LIBSSH2_POLLFD_POLLIN) &&      /* Want to be ready for read */
+                        ((fds[i].revents & LIBSSH2_POLLFD_POLLIN) == 0)) {      /* Not yet known to be ready for read */
                         fds[i].revents |=
                             libssh2_poll_channel_read(fds[i].fd.channel,
                                                       0) ?
                             LIBSSH2_POLLFD_POLLIN : 0;
                     }
-                    if ((fds[i].events & LIBSSH2_POLLFD_POLLEXT) &&
-                        /* Want to be ready for extended read */
-                        ((fds[i].revents & LIBSSH2_POLLFD_POLLEXT) == 0)) {
-                        /* Not yet known to be ready for extended read */
+                    if ((fds[i].events & LIBSSH2_POLLFD_POLLEXT) &&     /* Want to be ready for extended read */
+                        ((fds[i].revents & LIBSSH2_POLLFD_POLLEXT) == 0)) {     /* Not yet known to be ready for extended read */
                         fds[i].revents |=
                             libssh2_poll_channel_read(fds[i].fd.channel,
                                                       1) ?
                             LIBSSH2_POLLFD_POLLEXT : 0;
                     }
-                    if ((fds[i].events & LIBSSH2_POLLFD_POLLOUT) &&
-                        /* Want to be ready for write */
-                        ((fds[i].revents & LIBSSH2_POLLFD_POLLOUT) == 0)) {
-                        /* Not yet known to be ready for write */
+                    if ((fds[i].events & LIBSSH2_POLLFD_POLLOUT) &&     /* Want to be ready for write */
+                        ((fds[i].revents & LIBSSH2_POLLFD_POLLOUT) == 0)) {     /* Not yet known to be ready for write */
                         fds[i].revents |=
-                            poll_channel_write(fds[i].fd. channel) ?
+                            libssh2_poll_channel_write(fds[i].fd.
+                                                       channel) ?
                             LIBSSH2_POLLFD_POLLOUT : 0;
                     }
                     if (fds[i].fd.channel->remote.close
@@ -1456,12 +1407,10 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
                     break;
 
                 case LIBSSH2_POLLFD_LISTENER:
-                    if ((fds[i].events & LIBSSH2_POLLFD_POLLIN) &&
-                        /* Want a connection */
-                        ((fds[i].revents & LIBSSH2_POLLFD_POLLIN) == 0)) {
-                        /* No connections known of yet */
+                    if ((fds[i].events & LIBSSH2_POLLFD_POLLIN) &&      /* Want a connection */
+                        ((fds[i].revents & LIBSSH2_POLLFD_POLLIN) == 0)) {      /* No connections known of yet */
                         fds[i].revents |=
-                            poll_listener_queued(fds[i].fd.
+                            libssh2_poll_listener_queued(fds[i].fd.
                                                          listener) ?
                             LIBSSH2_POLLFD_POLLIN : 0;
                     }
@@ -1480,8 +1429,7 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
         }
 
         if (active_fds) {
-            /* Don't block on the sockets if we have channels/listeners which
-               are ready */
+            /* Don't block on the sockets if we have channels/listeners which are ready */
             timeout_remaining = 0;
         }
 #ifdef HAVE_POLL
@@ -1517,7 +1465,7 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
                 case LIBSSH2_POLLFD_CHANNEL:
                     if (sockets[i].events & POLLIN) {
                         /* Spin session until no data available */
-                        while (_libssh2_transport_read(fds[i].fd.channel->session)
+                        while (libssh2_packet_read(fds[i].fd.channel->session)
                                > 0);
                     }
                     if (sockets[i].revents & POLLHUP) {
@@ -1530,7 +1478,7 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
                 case LIBSSH2_POLLFD_LISTENER:
                     if (sockets[i].events & POLLIN) {
                         /* Spin session until no data available */
-                        while (_libssh2_transport_read(fds[i].fd.listener->session)
+                        while (libssh2_packet_read(fds[i].fd.listener->session)
                                > 0);
                     }
                     if (sockets[i].revents & POLLHUP) {
@@ -1583,7 +1531,7 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
                 case LIBSSH2_POLLFD_CHANNEL:
                     if (FD_ISSET(fds[i].fd.channel->session->socket_fd, &rfds)) {
                         /* Spin session until no data available */
-                        while (_libssh2_transport_read(fds[i].fd.channel->session)
+                        while (libssh2_packet_read(fds[i].fd.channel->session)
                                > 0);
                     }
                     break;
@@ -1592,23 +1540,20 @@ libssh2_poll(LIBSSH2_POLLFD * fds, unsigned int nfds, long timeout)
                     if (FD_ISSET
                         (fds[i].fd.listener->session->socket_fd, &rfds)) {
                         /* Spin session until no data available */
-                        while (_libssh2_transport_read(fds[i].fd.listener->session)
+                        while (libssh2_packet_read(fds[i].fd.listener->session)
                                > 0);
                     }
                     break;
                 }
             }
         }
-#endif /* else no select() or poll() -- timeout (and by extension
-        * timeout_remaining) will be equal to 0 */
+#endif /* else no select() or poll() -- timeout (and by extension timeout_remaining) will be equal to 0 */
     } while ((timeout_remaining > 0) && !active_fds);
 
     return active_fds;
 }
 
-/*
- * libssh2_session_block_direction
- *
+/* {{{ libssh2_session_block_direction
  * Get blocked direction when a function returns LIBSSH2_ERROR_EAGAIN
  * Returns LIBSSH2_SOCKET_BLOCK_INBOUND if recv() blocked
  * or LIBSSH2_SOCKET_BLOCK_OUTBOUND if send() blocked
@@ -1619,3 +1564,4 @@ libssh2_session_block_directions(LIBSSH2_SESSION *session)
     return session->socket_block_directions;
 }
 
+/* }}} */

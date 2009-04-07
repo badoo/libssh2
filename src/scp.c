@@ -39,234 +39,17 @@
 #include <errno.h>
 #include <stdlib.h>
 
-
-/* Max. length of a quoted string after libssh2_shell_quotearg() processing */
-#define libssh2_shell_quotedsize(s)	(3 * strlen(s) + 2)
-
-/*
-    This function quotes a string in a way suitable to be used with a
-    shell, e.g. the file name
-        one two
-    becomes
-        'one two'
-
-    The resulting output string is crafted in a way that makes it usable
-    with the two most common shell types: Bourne Shell derived shells
-    (sh, ksh, ksh93, bash, zsh) and C-Shell derivates (csh, tcsh).
-
-    The following special cases are handled:
-     o  If the string contains an apostrophy itself, the apostrophy
-	character is written in quotation marks, e.g. "'".
-	The shell cannot handle the syntax 'doesn\'t', so we close the
-	current argument word, add the apostrophe in quotation marks "",
-	and open a new argument word instead (_ indicate the input
-	string characters):
-	     _____   _   _
-	    'doesn' "'" 't'
-
-	Sequences of apostrophes are combined in one pair of quotation marks:
-	    a'''b
-	becomes
-	     _  ___  _
-	    'a'"'''"'b'
-
-     o	If the string contains an exclamation mark (!), the C-Shell
-	interprets it as an event number. Using \! (not within quotation
-	marks or single quotation marks) is a mechanism understood by
-	both Bourne Shell and C-Shell.
-
-	If a quotation was already started, the argument word is closed
-	first:
-	    a!b
-
-	become
-	     _  _ _
-	    'a'\!'b'
-
-    The result buffer must be large enough for the expanded result. A
-    bad case regarding expansion is alternating characters and
-    apostrophes:
-
-        a'b'c'd'                   (length 8) gets converted to
-        'a'"'"'b'"'"'c'"'"'d'"'"   (length 24)
-
-    This is the worst case.
-
-    Maximum length of the result:
-    	1 + 6 * (length(input) + 1) / 2) + 1
-
-        => 3 * length(input) + 2
-
-    Explanation:
-     o  leading apostrophe
-     o  one character / apostrophe pair (two characters) can get
-        represented as 6 characters: a' -> a'"'"'
-     o  String terminator (+1)
-
-    A result buffer three times the size of the input buffer + 2
-    characters should be safe.
-
-    References:
-     o  csh-compatible quotation (special handling for '!' etc.), see
-        http://www.grymoire.com/Unix/Csh.html#toc-uh-10
-
-    Return value:
-      Length of the resulting string (not counting the terminating '\0'),
-      or 0 in case of errors, e.g. result buffer too small
-
-    Note: this function could possible be used elsewhere within libssh2, but
-    until then it is kept static and in this source file.
-*/
-
-static unsigned
-libssh2_shell_quotearg(const char *path, unsigned char *buf,
-                       unsigned bufsize)
-{
-    const char *src;
-    unsigned char *dst, *endp;
-
-    /*
-     * Processing States:
-     *  UQSTRING:	unquoted string: ... -- used for quoting exclamation
-     *  		marks. This is the initial state
-     *  SQSTRING:       single-qouted-string: '... -- any character may follow
-     *  QSTRING:        quoted string: "... -- only apostrophes may follow
-     */
-    enum { UQSTRING, SQSTRING, QSTRING } state = UQSTRING;
-
-    endp = &buf[bufsize];
-    src = path;
-    dst = buf;
-    while (*src && dst < endp - 1) {
-
-    	switch (*src) {
-	    /*
-	     * Special handling for apostrophe.
-	     * An apostrophe is always written in quotation marks, e.g.
-	     * ' -> "'".
-	     */
-
-        case '\'':
-            switch (state) {
-            case UQSTRING:	/* Unquoted string */
-                if (dst+1 >= endp)
-                    return 0;
-                *dst++ = '"';
-                break;
-            case QSTRING:	/* Continue quoted string */
-                break;
-            case SQSTRING:	/* Close single quoted string */
-                if (dst+2 >= endp)
-                    return 0;
-                *dst++ = '\'';
-                *dst++ = '"';
-                break;
-            default:
-                break;
-            }
-            state = QSTRING;
-            break;
-
-            /*
-             * Special handling for exclamation marks. CSH interprets
-             * exclamation marks even when quoted with apostrophes. We convert
-             * it to the plain string \!, because both Bourne Shell and CSH
-             * interpret that as a verbatim exclamation mark.
-             */
-
-        case '!':
-            switch (state) {
-            case UQSTRING:
-                if (dst+1 >= endp)
-                    return 0;
-                *dst++ = '\\';
-                break;
-            case QSTRING:
-                if (dst+2 >= endp)
-                    return 0;
-                *dst++ = '"';		/* Closing quotation mark */
-                *dst++ = '\\';
-                break;
-            case SQSTRING:		/* Close single quoted string */
-                if (dst+2 >= endp)
-                    return 0;
-                *dst++ = '\'';
-                *dst++ = '\\';
-                break;
-            default:
-                break;
-            }
-            state = UQSTRING;
-            break;
-
-	    /*
-	     * Ordinary character: prefer single-quoted string
-	     */
-
-        default:
-            switch (state) {
-            case UQSTRING:
-                if (dst+1 >= endp)
-                    return 0;
-                *dst++ = '\'';
-                break;
-            case QSTRING:
-                if (dst+2 >= endp)
-                    return 0;
-                *dst++ = '"';		/* Closing quotation mark */
-                *dst++ = '\'';
-                break;
-            case SQSTRING:	/* Continue single quoted string */
-                break;
-            default:
-                break;
-            }
-            state = SQSTRING;	/* Start single-quoted string */
-            break;
-	}
-
-        if (dst+1 >= endp)
-            return 0;
-        *dst++ = *src++;
-    }
-
-    switch (state) {
-    	case UQSTRING:
-            break;
-        case QSTRING:           /* Close quoted string */
-            if (dst+1 >= endp)
-                return 0;
-            *dst++ = '"';
-            break;
-        case SQSTRING:          /* Close single quoted string */
-            if (dst+1 >= endp)
-                return 0;
-            *dst++ = '\'';
-            break;
-        default:
-            break;
-    }
-
-    if (dst+1 >= endp)
-        return 0;
-    *dst = '\0';
-
-    /* The result cannot be larger than 3 * strlen(path) + 2 */
-    /* assert((dst - buf) <= (3 * (src - path) + 2)); */
-
-    return dst - buf;
-}
-
-/*
- * libssh2_scp_recv
- *
+/* {{{ libssh2_scp_recv
  * Open a channel and request a remote file via SCP
  *
+ * NOTE:  Will block in a busy loop on error.  This has to be done,
+ *        otherwise the blocking error code would erase the true
+ *        cause of the error.
  */
 LIBSSH2_API LIBSSH2_CHANNEL *
 libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
 {
-    int cmd_len;
+    int path_len = strlen(path);
     int rc;
 
     if (session->scpRecv_state == libssh2_NB_state_idle) {
@@ -275,28 +58,31 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
         session->scpRecv_mtime = 0;
         session->scpRecv_atime = 0;
 
-        session->scpRecv_command_len =
-            libssh2_shell_quotedsize(path) + sizeof("scp -f ") + (sb?1:0);
+        session->scpRecv_command_len = path_len + sizeof("scp -f ");
+
+        if (sb) {
+            session->scpRecv_command_len++;
+        }
 
         session->scpRecv_command =
             LIBSSH2_ALLOC(session, session->scpRecv_command_len);
-
         if (!session->scpRecv_command) {
             libssh2_error(session, LIBSSH2_ERROR_ALLOC,
                           "Unable to allocate a command buffer for SCP session",
                           0);
             return NULL;
         }
-
-        /* sprintf() is fine here since we allocated a large enough buffer */
-        sprintf((char *)session->scpRecv_command, "scp -%sf ", sb?"p":"");
-
-        cmd_len = strlen((char *)session->scpRecv_command);
-
-        (void) libssh2_shell_quotearg(path,
-                                      &session->scpRecv_command[cmd_len],
-                                      session->scpRecv_command_len - cmd_len);
-
+        if (sb) {
+            memcpy(session->scpRecv_command, "scp -pf ",
+                   sizeof("scp -pf ") - 1);
+            memcpy(session->scpRecv_command + sizeof("scp -pf ") - 1, path,
+                   path_len);
+        } else {
+            memcpy(session->scpRecv_command, "scp -f ", sizeof("scp -f ") - 1);
+            memcpy(session->scpRecv_command + sizeof("scp -f ") - 1, path,
+                   path_len);
+        }
+        session->scpRecv_command[session->scpRecv_command_len - 1] = '\0';
 
         _libssh2_debug(session, LIBSSH2_DBG_SCP,
                        "Opening channel for SCP receive");
@@ -306,6 +92,7 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
 
     if (session->scpRecv_state == libssh2_NB_state_created) {
         /* Allocate a channel */
+        do {
             session->scpRecv_channel =
                 libssh2_channel_open_ex(session, "session",
                                         sizeof("session") - 1,
@@ -318,13 +105,15 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                     LIBSSH2_FREE(session, session->scpRecv_command);
                     session->scpRecv_command = NULL;
                     session->scpRecv_state = libssh2_NB_state_idle;
-            }
-            else {
+                    return NULL;
+                } else if (libssh2_session_last_errno(session) ==
+                           LIBSSH2_ERROR_EAGAIN) {
                     libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                                   "Would block starting up channel", 0);
+                    return NULL;
                 }
-            return NULL;
             }
+        } while (!session->scpRecv_channel);
 
         session->scpRecv_state = libssh2_NB_state_sent;
     }
@@ -373,7 +162,8 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
 
     if ((session->scpRecv_state == libssh2_NB_state_sent2)
         || (session->scpRecv_state == libssh2_NB_state_sent3)) {
-        while (sb && (session->scpRecv_response_len <
+        while (sb
+               && (session->scpRecv_response_len <
                    LIBSSH2_SCP_RESPONSE_BUFLEN)) {
             unsigned char *s, *p;
 
@@ -404,7 +194,7 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                                   0);
 
                     session->scpRecv_err_len =
-                        _libssh2_channel_packet_data_len(session->
+                        libssh2_channel_packet_data_len(session->
                                                         scpRecv_channel, 0);
                     session->scpRecv_err_msg =
                         LIBSSH2_ALLOC(session, session->scpRecv_err_len + 1);
@@ -420,9 +210,8 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                                                  session->scpRecv_err_len);
                     if (rc <= 0) {
                         /*
-                         * Since we have alread started reading this packet,
-                         * it is already in the systems so it can't return
-                         * PACKET_EAGAIN
+                         * Since we have alread started reading this packet, it is
+                         * already in the systems so it can't return PACKET_EAGAIN
                          */
                         LIBSSH2_FREE(session, session->scpRecv_err_msg);
                         session->scpRecv_err_msg = NULL;
@@ -471,13 +260,11 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                                       0);
                         goto scp_recv_error;
                     }
-                    /* Way too short to be an SCP response, or not done yet,
-                       short circuit */
+                    /* Way too short to be an SCP response,  or not done yet, short circuit */
                     continue;
                 }
 
-                /* We're guaranteed not to go under response_len == 0 by the
-                   logic above */
+                /* We're guaranteed not to go under response_len == 0 by the logic above */
                 while ((session->
                         scpRecv_response[session->scpRecv_response_len - 1] ==
                         '\r')
@@ -570,8 +357,7 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                                "mtime = %ld, atime = %ld",
                                session->scpRecv_mtime, session->scpRecv_atime);
 
-                /* We *should* check that atime.usec is valid, but why let
-                   that stop use? */
+                /* We *should* check that atime.usec is valid, but why let that stop use? */
                 break;
             }
         }
@@ -643,13 +429,11 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                                       0);
                         goto scp_recv_error;
                     }
-                    /* Way too short to be an SCP response, or not done yet,
-                       short circuit */
+                    /* Way too short to be an SCP response,  or not done yet, short circuit */
                     continue;
                 }
 
-                /* We're guaranteed not to go under response_len == 0 by the
-                   logic above */
+                /* We're guaranteed not to go under response_len == 0 by the logic above */
                 while ((session->
                         scpRecv_response[session->scpRecv_response_len - 1] ==
                         '\r')
@@ -732,8 +516,7 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
                                "mode = 0%lo size = %ld", session->scpRecv_mode,
                                session->scpRecv_size);
 
-                /* We *should* check that basename is valid, but why let that
-                   stop us? */
+                /* We *should* check that basename is valid, but why let that stop us? */
                 break;
             }
         }
@@ -760,24 +543,29 @@ libssh2_scp_recv(LIBSSH2_SESSION * session, const char *path, struct stat * sb)
     return NULL;
 }
 
-/*
- * libssh2_scp_send_ex
- *
+/* }}} */
+
+/* {{{ libssh2_scp_send_ex
  * Send a file using SCP
  *
+ * NOTE:  Will block in a busy loop on error.  This has to be done,
+ *        otherwise the blocking error code would erase the true
+ *        cause of the error.
  */
 LIBSSH2_API LIBSSH2_CHANNEL *
 libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
                     size_t size, long mtime, long atime)
 {
-    int cmd_len;
+    int path_len = strlen(path);
     unsigned const char *base;
     int rc;
 
     if (session->scpSend_state == libssh2_NB_state_idle) {
-        session->scpSend_command_len =
-            libssh2_shell_quotedsize(path) + sizeof("scp -t ") +
-            ((mtime || atime)?1:0);
+        session->scpSend_command_len = path_len + sizeof("scp -t ");
+
+        if (mtime || atime) {
+            session->scpSend_command_len++;
+        }
 
         session->scpSend_command =
             LIBSSH2_ALLOC(session, session->scpSend_command_len);
@@ -788,15 +576,16 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
             return NULL;
         }
 
-        sprintf((char *)session->scpSend_command, "scp -%st ",
-                (mtime || atime)?"p":"");
-
-        cmd_len = strlen((char *)session->scpSend_command);
-
-        (void)libssh2_shell_quotearg(path,
-                                     &session->scpSend_command[cmd_len],
-                                     session->scpSend_command_len - cmd_len);
-
+        if (mtime || atime) {
+            memcpy(session->scpSend_command, "scp -pt ",
+                   sizeof("scp -pt ") - 1);
+            memcpy(session->scpSend_command + sizeof("scp -pt ") - 1, path,
+                   path_len);
+        } else {
+            memcpy(session->scpSend_command, "scp -t ", sizeof("scp -t ") - 1);
+            memcpy(session->scpSend_command + sizeof("scp -t ") - 1, path,
+                   path_len);
+        }
         session->scpSend_command[session->scpSend_command_len - 1] = '\0';
 
         _libssh2_debug(session, LIBSSH2_DBG_SCP,
@@ -813,17 +602,17 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
                                     LIBSSH2_CHANNEL_PACKET_DEFAULT, NULL, 0);
         if (!session->scpSend_channel) {
             if (libssh2_session_last_errno(session) != LIBSSH2_ERROR_EAGAIN) {
-                /* previous call set libssh2_session_last_error(), pass it
-                   through */
+                /* previous call set libssh2_session_last_error(), pass it through */
                 LIBSSH2_FREE(session, session->scpSend_command);
                 session->scpSend_command = NULL;
                 session->scpSend_state = libssh2_NB_state_idle;
-            }
-            else {
+                return NULL;
+            } else if (libssh2_session_last_errno(session) ==
+                       LIBSSH2_ERROR_EAGAIN) {
                 libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                               "Would block starting up channel", 0);
+                return NULL;
             }
-            return NULL;
         }
 
         session->scpSend_state = libssh2_NB_state_sent;
@@ -839,10 +628,8 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
             libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                           "Would block requesting SCP startup", 0);
             return NULL;
-        }
-        else if (rc) {
-            /* previous call set libssh2_session_last_error(), pass it
-               through */
+        } else if (rc) {
+            /* previous call set libssh2_session_last_error(), pass it through */
             LIBSSH2_FREE(session, session->scpSend_command);
             session->scpSend_command = NULL;
             libssh2_error(session, LIBSSH2_ERROR_SCP_PROTOCOL,
@@ -892,7 +679,7 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
                 libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                               "Would block sending time data for SCP file", 0);
                 return NULL;
-            } else if (rc != (int)session->scpSend_response_len) {
+            } else if (rc != session->scpSend_response_len) {
                 libssh2_error(session, LIBSSH2_ERROR_SOCKET_SEND,
                               "Unable to send time data for SCP file", 0);
                 goto scp_send_error;
@@ -951,7 +738,7 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
             libssh2_error(session, LIBSSH2_ERROR_EAGAIN,
                           "Would block send core file data for SCP file", 0);
             return NULL;
-        } else if (rc != (int)session->scpSend_response_len) {
+        } else if (rc != session->scpSend_response_len) {
             libssh2_error(session, LIBSSH2_ERROR_SOCKET_SEND,
                           "Unable to send core file data for SCP file", 0);
             goto scp_send_error;
@@ -981,7 +768,7 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
                           "Invalid ACK response from remote", 0);
 
             session->scpSend_err_len =
-                _libssh2_channel_packet_data_len(session->scpSend_channel, 0);
+                libssh2_channel_packet_data_len(session->scpSend_channel, 0);
             session->scpSend_err_msg =
                 LIBSSH2_ALLOC(session, session->scpSend_err_len + 1);
             if (!session->scpSend_err_msg) {
@@ -1021,3 +808,4 @@ libssh2_scp_send_ex(LIBSSH2_SESSION * session, const char *path, int mode,
     return NULL;
 }
 
+/* }}} */
